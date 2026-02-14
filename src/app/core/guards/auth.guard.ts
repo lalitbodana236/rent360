@@ -9,12 +9,14 @@ import {
 } from '@angular/router';
 import { AppFeatureKey } from '../constants/app-features';
 import { AuthService, UserRole } from '../services/auth.service';
+import { AuthorizationService } from '../services/authorization.service';
 import { FeatureFlagsService } from '../services/feature-flags.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate, CanActivateChild {
   constructor(
     private readonly auth: AuthService,
+    private readonly authorization: AuthorizationService,
     private readonly router: Router,
     private readonly featureFlags: FeatureFlagsService,
   ) {}
@@ -37,11 +39,16 @@ export class AuthGuard implements CanActivate, CanActivateChild {
       return this.router.createUrlTree(['/dashboard']);
     }
 
-    const roles = (route.data['roles'] as UserRole[] | undefined) ?? [];
-    if (!roles.length || this.auth.hasAnyRole(roles)) {
-      return true;
+    const permission = route.data['permission'] as string | undefined;
+    if (permission && !this.authorization.canView(permission)) {
+      return this.router.createUrlTree(['/dashboard']);
     }
 
-    return this.router.createUrlTree(['/dashboard']);
+    const roles = (route.data['roles'] as UserRole[] | undefined) ?? [];
+    if (roles.length && !this.auth.hasAnyRole(roles)) {
+      return this.router.createUrlTree(['/dashboard']);
+    }
+
+    return true;
   }
 }

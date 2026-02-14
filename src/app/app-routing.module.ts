@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { PERMISSIONS } from './core/constants/permissions';
 import { AuthGuard } from './core/guards/auth.guard';
 import { LayoutComponent } from './layout/layout.component';
 
@@ -31,6 +32,7 @@ const routes: Routes = [
           import('./features/dashboard/dashboard.module').then(
             (m) => m.DashboardModule,
           ),
+        data: { permission: PERMISSIONS.dashboardView },
       },
       {
         path: 'payments',
@@ -38,7 +40,7 @@ const routes: Routes = [
           import('./features/payments/payments.module').then(
             (m) => m.PaymentsModule,
           ),
-        data: { roles: ['owner', 'tenant'] },
+        data: { permission: PERMISSIONS.paymentsView },
       },
       {
         path: 'properties',
@@ -46,7 +48,7 @@ const routes: Routes = [
           import('./features/properties/properties.module').then(
             (m) => m.PropertiesModule,
           ),
-        data: { roles: ['owner', 'societyAdmin', 'tenant'] },
+        data: { permission: PERMISSIONS.propertiesView },
       },
       {
         path: 'tenants',
@@ -54,7 +56,7 @@ const routes: Routes = [
           import('./features/tenants/tenants.module').then(
             (m) => m.TenantsModule,
           ),
-        data: { roles: ['owner', 'societyAdmin', 'tenant'] },
+        data: { permission: PERMISSIONS.tenantsView },
       },
       {
         path: 'society',
@@ -63,8 +65,7 @@ const routes: Routes = [
             (m) => m.SocietyModule,
           ),
         data: {
-          feature: 'enableSocietyModule',
-          roles: ['owner', 'societyAdmin', 'tenant', 'security', 'vendor'],
+          permission: PERMISSIONS.societyView,
         },
       },
       {
@@ -73,7 +74,7 @@ const routes: Routes = [
           import('./features/reports/reports.module').then(
             (m) => m.ReportsModule,
           ),
-        data: { roles: ['owner', 'societyAdmin', 'tenant'] },
+        data: { permission: PERMISSIONS.reportsView },
       },
       {
         path: 'settings',
@@ -81,6 +82,7 @@ const routes: Routes = [
           import('./features/settings/settings.module').then(
             (m) => m.SettingsModule,
           ),
+        data: { permission: PERMISSIONS.settingsView },
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],

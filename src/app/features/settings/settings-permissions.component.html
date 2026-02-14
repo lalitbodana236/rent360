@@ -1,0 +1,94 @@
+<section class="r360-section">
+  <r360-card>
+    <div class="text-sm text-gray-600 dark:text-gray-300">
+      Role permissions are defaults. Per-user overrides below can grant or revoke specific permissions centrally.
+    </div>
+  </r360-card>
+</section>
+
+<section class="r360-section" *ngIf="loading">
+  <r360-card>Loading permission manager...</r360-card>
+</section>
+
+<section class="r360-section" *ngIf="!loading && error">
+  <r360-card>
+    <div class="text-sm text-danger">{{ error }}</div>
+  </r360-card>
+</section>
+
+<section class="r360-section" *ngIf="!loading && !error && !canManageAuthorization">
+  <r360-card>
+    <div class="text-sm text-gray-600 dark:text-gray-300">
+      You can view settings, but only users with authorization management permission can change access rules.
+    </div>
+  </r360-card>
+</section>
+
+<section class="r360-section" *ngIf="!loading && !error && canManageAuthorization">
+  <r360-card>
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <label class="r360-label">
+        Select User
+        <select
+          class="r360-input mt-1"
+          [ngModel]="selectedUserEmail"
+          (ngModelChange)="selectUser($event)"
+        >
+          <option *ngFor="let user of users" [value]="user.email">
+            {{ user.fullName }} ({{ user.email }})
+          </option>
+        </select>
+      </label>
+
+      <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+        <div class="text-xs uppercase tracking-wide text-gray-500">Assigned Roles</div>
+        <div class="mt-2 text-sm text-gray-700 dark:text-gray-200">
+          {{ getRoleList(selectedUser) }}
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4" *ngIf="selectedUser as user">
+      <div class="mb-3 flex items-center justify-between">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+          Permission Overrides
+        </h3>
+        <button class="r360-btn-secondary" type="button" (click)="resetUser(user)">
+          Reset User Overrides
+        </button>
+      </div>
+
+      <div class="r360-table-wrap">
+        <table class="r360-table">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th class="r360-th">Feature Group</th>
+              <th class="r360-th">Permission</th>
+              <th class="r360-th">Effective Access</th>
+              <th class="r360-th">Override</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="r360-row" *ngFor="let row of permissionRows; trackBy: trackByPermission">
+              <td class="r360-td">{{ row.group }}</td>
+              <td class="r360-td">{{ row.label }}</td>
+              <td class="r360-td">{{ currentAccess(user, row.key) }}</td>
+              <td class="r360-td">
+                <select
+                  class="r360-input"
+                  [ngModel]="currentOverride(user, row.key)"
+                  (ngModelChange)="setOverride(user, row.key, $event)"
+                >
+                  <option value="">Inherit Role Default</option>
+                  <option *ngFor="let option of accessOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </r360-card>
+</section>

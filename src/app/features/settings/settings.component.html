@@ -1,0 +1,29 @@
+<div class="r360-page">
+  <r360-page-header
+    title="Settings"
+    subtitle="Manage profile preferences and centralized access controls"
+  ></r360-page-header>
+
+  <section class="r360-section">
+    <r360-card class="settings-tabs-card">
+      <nav class="settings-tabs">
+        <a
+          routerLink="user"
+          routerLinkActive="settings-tab-active"
+          class="settings-tab"
+        >
+          User Settings
+        </a>
+        <a
+          routerLink="permissions"
+          routerLinkActive="settings-tab-active"
+          class="settings-tab"
+        >
+          Permissions
+        </a>
+      </nav>
+    </r360-card>
+  </section>
+
+  <router-outlet></router-outlet>
+</div>

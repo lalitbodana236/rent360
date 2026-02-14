@@ -1,0 +1,25 @@
+.settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.settings-tab {
+  border: 1px solid rgb(229 231 235);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(75 85 99);
+  text-decoration: none;
+}
+
+.settings-tab:hover {
+  background: rgb(249 250 251);
+}
+
+.settings-tab-active {
+  background: rgb(30 64 175);
+  border-color: rgb(30 64 175);
+  color: #fff;
+}

@@ -1,0 +1,107 @@
+<section class="r360-section">
+  <r360-card>
+    <div class="text-sm text-gray-600 dark:text-gray-300">
+      Update your profile and personal preferences. These values are used in your app experience.
+    </div>
+  </r360-card>
+</section>
+
+<section class="r360-section">
+  <r360-card>
+    <form [formGroup]="form" (ngSubmit)="save()" class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <label class="r360-label">
+        Full Name
+        <input class="r360-input mt-1" formControlName="fullName" type="text" />
+      </label>
+
+      <label class="r360-label">
+        Email
+        <input class="r360-input mt-1" formControlName="email" type="email" />
+      </label>
+
+      <label class="r360-label">
+        Mobile Number
+        <input class="r360-input mt-1" formControlName="mobileNumber" type="text" />
+      </label>
+
+      <label class="r360-label">
+        WhatsApp Number
+        <input class="r360-input mt-1" formControlName="whatsAppNumber" type="text" />
+      </label>
+
+      <label class="r360-label lg:col-span-2">
+        Address
+        <input class="r360-input mt-1" formControlName="address" type="text" />
+      </label>
+
+      <label class="r360-label">
+        Currency
+        <select class="r360-input mt-1" formControlName="currency">
+          <option value="USD">USD</option>
+          <option value="INR">INR</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="AED">AED</option>
+        </select>
+      </label>
+
+      <label class="r360-label">
+        Default Dashboard
+        <select class="r360-input mt-1" formControlName="defaultDashboard">
+          <option value="owner">Owner</option>
+          <option value="tenant">Tenant</option>
+        </select>
+      </label>
+
+      <label class="r360-label">
+        Time Format
+        <select class="r360-input mt-1" formControlName="timeFormat">
+          <option value="12h">12-hour</option>
+          <option value="24h">24-hour</option>
+        </select>
+      </label>
+
+      <label class="r360-label">
+        Time Zone
+        <select class="r360-input mt-1" formControlName="timeZone">
+          <option value="America/New_York">America/New_York</option>
+          <option value="America/Chicago">America/Chicago</option>
+          <option value="America/Denver">America/Denver</option>
+          <option value="America/Los_Angeles">America/Los_Angeles</option>
+          <option value="Asia/Kolkata">Asia/Kolkata</option>
+        </select>
+      </label>
+
+      <label class="r360-label">
+        Language
+        <select class="r360-input mt-1" formControlName="language">
+          <option value="en">English</option>
+          <option value="hi">Hindi</option>
+        </select>
+      </label>
+
+      <div class="lg:col-span-2">
+        <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">Notification Preferences</div>
+        <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <label class="r360-checkbox">
+            <input type="checkbox" formControlName="notifyEmail" />
+            Email
+          </label>
+          <label class="r360-checkbox">
+            <input type="checkbox" formControlName="notifyWhatsApp" />
+            WhatsApp
+          </label>
+          <label class="r360-checkbox">
+            <input type="checkbox" formControlName="notifyInApp" />
+            In-App
+          </label>
+        </div>
+      </div>
+
+      <div class="lg:col-span-2 flex items-center gap-3">
+        <button class="r360-btn-primary" type="submit">Save User Settings</button>
+        <span class="text-sm text-green-600" *ngIf="saved">Saved</span>
+      </div>
+    </form>
+  </r360-card>
+</section>

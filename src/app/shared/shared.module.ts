@@ -17,6 +17,7 @@ import { DataTableComponent } from './components/data-table/data-table.component
 import { ExportDropdownComponent } from './components/export-dropdown/export-dropdown.component';
 import { ConfirmationModalComponent } from './components/confirmation-modal/confirmation-modal.component';
 import { SidebarGroupComponent } from './components/sidebar-group/sidebar-group.component';
+import { CanDirective } from './directives/can.directive';
 import { RoleDirective } from './directives/role.directive';
 import { AppCurrencyPipe } from './pipes/app-currency.pipe';
 
@@ -37,6 +38,7 @@ import { AppCurrencyPipe } from './pipes/app-currency.pipe';
     ExportDropdownComponent,
     ConfirmationModalComponent,
     SidebarGroupComponent,
+    CanDirective,
     RoleDirective,
     AppCurrencyPipe,
   ],
@@ -60,6 +62,7 @@ import { AppCurrencyPipe } from './pipes/app-currency.pipe';
     ExportDropdownComponent,
     ConfirmationModalComponent,
     SidebarGroupComponent,
+    CanDirective,
     RoleDirective,
     AppCurrencyPipe,
   ],

@@ -1,6 +1,8 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
+import { PERMISSIONS } from '../../core/constants/permissions';
 import { AuthService } from '../../core/services/auth.service';
+import { AuthorizationService } from '../../core/services/authorization.service';
 import {
   BHKType,
   FurnishingType,
@@ -85,6 +87,7 @@ export class PropertiesComponent implements OnInit {
     private readonly fb: FormBuilder,
     private readonly propertiesData: PropertiesDataService,
     private readonly auth: AuthService,
+    private readonly authorization: AuthorizationService,
   ) {}
 
   ngOnInit(): void {
@@ -95,7 +98,7 @@ export class PropertiesComponent implements OnInit {
   }
 
   get canEdit(): boolean {
-    return this.auth.hasAnyRole(['owner', 'societyAdmin']);
+    return this.authorization.canWrite(PERMISSIONS.propertiesWrite);
   }
 
   get propertyOptions(): string[] {

@@ -130,4 +130,17 @@ export class AuthService {
       return null;
     }
   }
+
+  listUsers(): Observable<AuthUser[]> {
+    return this.apiClient
+      .get<{ users: MockAuthUser[] }>({
+        endpoint: 'auth/users',
+        mockPath: 'auth/users.json',
+      })
+      .pipe(
+        map((res) =>
+          res.users.map(({ password: _, ...user }) => user),
+        ),
+      );
+  }
 }

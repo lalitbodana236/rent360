@@ -10,9 +10,16 @@ export interface UserSettings {
   address: string;
   currency: 'USD' | 'INR' | 'EUR' | 'GBP' | 'AED';
   defaultDashboard: 'owner' | 'tenant';
+  timeFormat: '12h' | '24h';
+  timeZone: string;
+  language: 'en' | 'hi';
+  notifyEmail: boolean;
+  notifyWhatsApp: boolean;
+  notifyInApp: boolean;
+  whatsAppNumber: string;
 }
 
-interface SettingsRecord extends UserSettings {}
+type SettingsRecord = Partial<UserSettings> & Pick<UserSettings, 'email'>;
 
 interface UserSettingsResponse {
   preferences: SettingsRecord[];
@@ -25,6 +32,13 @@ const DEFAULT_SETTINGS: UserSettings = {
   address: '10 Main Street',
   currency: 'USD',
   defaultDashboard: 'owner',
+  timeFormat: '12h',
+  timeZone: 'America/New_York',
+  language: 'en',
+  notifyEmail: true,
+  notifyWhatsApp: false,
+  notifyInApp: true,
+  whatsAppNumber: '+1 555-1234',
 };
 
 @Injectable()
@@ -46,10 +60,11 @@ export class UserSettingsService {
       })
       .pipe(
         map((res) =>
-          res.preferences.find((entry) => entry.email.toLowerCase() === email.toLowerCase()) ?? {
+          ({
             ...DEFAULT_SETTINGS,
+            ...(res.preferences.find((entry) => entry.email.toLowerCase() === email.toLowerCase()) ?? {}),
             email,
-          },
+          }),
         ),
         tap((settings) => {
           this.subject.next({ ...this.subject.value, ...settings });

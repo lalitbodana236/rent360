@@ -1,6 +1,10 @@
 import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
+import { AppFeatureKey } from '../../core/constants/app-features';
+import { PERMISSIONS } from '../../core/constants/permissions';
 import { AuthService } from '../../core/services/auth.service';
+import { AuthorizationService } from '../../core/services/authorization.service';
+import { FeatureFlagsService } from '../../core/services/feature-flags.service';
 import { UserSettingsService } from '../../core/services/user-settings.service';
 
 type SidebarIcon =
@@ -27,6 +31,8 @@ interface SidebarItem {
   label: string;
   route: string;
   icon: SidebarIcon;
+  permission?: string;
+  feature?: AppFeatureKey;
   children?: SidebarChild[];
 }
 
@@ -43,12 +49,23 @@ export class SidebarComponent {
   readonly expandedGroups = new Set<string>();
 
   readonly items: SidebarItem[] = [
-    { label: 'Dashboard', route: '/dashboard', icon: 'home' },
-    { label: 'Properties & Units', route: '/properties', icon: 'building' },
+    {
+      label: 'Dashboard',
+      route: '/dashboard',
+      icon: 'home',
+      permission: PERMISSIONS.dashboardView,
+    },
+    {
+      label: 'Properties & Units',
+      route: '/properties',
+      icon: 'building',
+      permission: PERMISSIONS.propertiesView,
+    },
     {
       label: 'Payments',
       route: '/payments',
       icon: 'wallet',
+      permission: PERMISSIONS.paymentsView,
       children: [
         { label: 'Rent & Charges', route: '/payments' },
         { label: 'Accounting', route: '/payments' },
@@ -56,11 +73,18 @@ export class SidebarComponent {
         { label: 'Payment Accounts', route: '/payments' },
       ],
     },
-    { label: 'Tenants', route: '/tenants', icon: 'users' },
+    {
+      label: 'Tenants',
+      route: '/tenants',
+      icon: 'users',
+      permission: PERMISSIONS.tenantsView,
+    },
     {
       label: 'Society',
       route: '/society',
       icon: 'layers',
+      permission: PERMISSIONS.societyView,
+      feature: 'enableSocietyModule',
       children: [
         { label: 'Buildings', route: '/society/buildings' },
         { label: 'Flats', route: '/society/flats' },
@@ -77,6 +101,8 @@ export class SidebarComponent {
       label: 'Marketplace',
       route: '/marketplace',
       icon: 'key',
+      permission: PERMISSIONS.marketplaceView,
+      feature: 'enableMarketplace',
       children: [
         { label: 'Listings', route: '/marketplace/listings' },
         { label: 'Property Detail', route: '/marketplace/property-detail' },
@@ -85,18 +111,52 @@ export class SidebarComponent {
         { label: 'Favorites', route: '/marketplace/favorites' },
       ],
     },
-    { label: 'Communications', route: '/reports/communications', icon: 'chat' },
-    { label: 'Tasks', route: '/reports/tasks', icon: 'task' },
-    { label: 'Reports', route: '/reports', icon: 'chart' },
-    { label: 'Settings', route: '/settings', icon: 'settings' },
+    {
+      label: 'Communications',
+      route: '/reports/communications',
+      icon: 'chat',
+      permission: PERMISSIONS.reportsView,
+    },
+    {
+      label: 'Tasks',
+      route: '/reports/tasks',
+      icon: 'task',
+      permission: PERMISSIONS.reportsView,
+    },
+    {
+      label: 'Reports',
+      route: '/reports',
+      icon: 'chart',
+      permission: PERMISSIONS.reportsView,
+    },
+    {
+      label: 'Settings',
+      route: '/settings',
+      icon: 'settings',
+      permission: PERMISSIONS.settingsView,
+    },
     { label: 'Help', route: '/settings', icon: 'help' },
   ];
 
   constructor(
     private readonly settings: UserSettingsService,
     private readonly auth: AuthService,
+    private readonly authorization: AuthorizationService,
+    private readonly featureFlags: FeatureFlagsService,
     private readonly router: Router,
   ) {}
+
+  get visibleItems(): SidebarItem[] {
+    return this.items.filter((item) => {
+      if (item.feature && !this.featureFlags.isEnabled(item.feature)) {
+        return false;
+      }
+      if (!item.permission) {
+        return true;
+      }
+      return this.authorization.canView(item.permission);
+    });
+  }
 
   iconPath(icon: SidebarIcon): string {
     const map: Record<SidebarIcon, string> = {
