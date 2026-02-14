@@ -8,7 +8,7 @@ import { MOCK_PROPERTIES_STORE_KEY } from '../constants/mock-storage-keys';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
 import { PlatformInsight, PlatformInsightsService } from './platform-insights.service';
 
-export type DashboardPersona = 'owner' | 'tenant' | 'societyAdmin';
+export type DashboardPersona = 'owner' | 'tenant' | 'societyAdmin' | 'vendor';
 
 interface DirectoryRow {
   name: string;
@@ -159,12 +159,18 @@ export class DashboardDataService {
     if (role === 'societyAdmin') {
       return 'societyAdmin';
     }
+    if (role === 'vendor') {
+      return 'vendor';
+    }
     return 'owner';
   }
 
   private personaToFileKey(persona: DashboardPersona): string {
     if (persona === 'societyAdmin') {
       return 'society-admin';
+    }
+    if (persona === 'vendor') {
+      return 'owner';
     }
     return persona;
   }
@@ -250,6 +256,53 @@ export class DashboardDataService {
         }
         return kpi;
       });
+
+      return overview;
+    }
+
+    if (persona === 'vendor') {
+      const assignedUnits = allUnits.filter(
+        (u) => u.occupancyStatus === 'occupied' || u.occupancyStatus === 'maintenance',
+      );
+      const openTasks = Math.max(1, assignedUnits.length * 2);
+      const completedTasks = Math.max(0, Math.round(openTasks * 0.62));
+      const overdueTasks = Math.max(0, openTasks - completedTasks);
+      const pendingVisits = Math.max(1, Math.round(assignedUnits.length * 0.8));
+      const expectedPayout = assignedUnits.reduce((sum, u) => sum + (u.rent || 0) * 0.02, 0);
+
+      overview.kpis = [
+        { label: 'Assigned Tasks', value: String(openTasks) },
+        { label: 'Completed This Month', value: String(completedTasks) },
+        { label: 'Pending Visits', value: String(pendingVisits) },
+        { label: 'Expected Payout', value: this.toMoney(expectedPayout) },
+      ];
+
+      const completionPercent = openTasks ? Math.round((completedTasks / openTasks) * 100) : 0;
+      const overduePercent = openTasks ? Math.round((overdueTasks / openTasks) * 100) : 0;
+
+      overview.collectionHealth = [
+        { label: 'Completed', percent: completionPercent, tone: 'success' },
+        { label: 'In Progress', percent: Math.max(5, 100 - completionPercent), tone: 'info' },
+        { label: 'Overdue', percent: overduePercent, tone: 'warning' },
+        { label: 'SLA Risk', percent: Math.max(3, Math.round(overduePercent * 0.5)), tone: 'danger' },
+      ];
+
+      overview.charges = assignedUnits.slice(0, 6).map((unit, index) => ({
+        amount: this.toMoney((unit.rent || 0) * 0.02),
+        property:
+          scopedProperties.find((property) =>
+            property.units.some((u) => u.id === unit.id),
+          )?.name ?? 'Property',
+        unit: unit.unitCode,
+        description: `Service Task #${index + 1}`,
+        status:
+          unit.occupancyStatus === 'maintenance'
+            ? 'Late'
+            : unit.occupancyStatus === 'occupied'
+              ? 'Due'
+              : 'Paid',
+        action: 'View task',
+      }));
 
       return overview;
     }

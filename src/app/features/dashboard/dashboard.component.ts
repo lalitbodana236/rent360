@@ -19,13 +19,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   data: DashboardOverview | null = null;
   insights: PlatformInsight[] = [];
   userName = 'User';
+  private locale = 'en-US';
+  private currency: 'USD' | 'INR' | 'EUR' | 'GBP' | 'AED' = 'USD';
   private baseData: DashboardOverview | null = null;
   private readonly subscriptions = new Subscription();
 
   availablePersonas: DashboardPersona[] = [];
   selectedPersona: DashboardPersona = 'owner';
 
-  viewMode: 'monthly' | 'yearly' = 'monthly';
   selectedMonth = new Date().getMonth() + 1;
   selectedYear = new Date().getFullYear();
   readonly yearOptions = [2024, 2025, 2026, 2027];
@@ -55,6 +56,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.settings.userSettings$.subscribe((user) => {
         this.userName = user.fullName;
+        this.locale = user.language === 'hi' ? 'hi-IN' : 'en-US';
+        this.currency = user.currency;
+        if (this.baseData) {
+          this.applyPeriodFilter();
+        }
       }),
     );
 
@@ -79,6 +85,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.selectedPersona === 'societyAdmin') {
       return 'Society Admin View';
     }
+    if (this.selectedPersona === 'vendor') {
+      return 'Vendor View';
+    }
     return 'Owner View';
   }
 
@@ -88,6 +97,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     if (this.selectedPersona === 'societyAdmin') {
       return 'Society Billing';
+    }
+    if (this.selectedPersona === 'vendor') {
+      return 'Task Payout Queue';
     }
     return 'Owner Charges';
   }
@@ -99,6 +111,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (persona === 'societyAdmin') {
       return 'Society Admin';
     }
+    if (persona === 'vendor') {
+      return 'Vendor';
+    }
     return 'Owner';
   }
 
@@ -108,11 +123,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     this.selectedPersona = persona;
     this.loadPersona(persona);
-  }
-
-  changeViewMode(mode: 'monthly' | 'yearly'): void {
-    this.viewMode = mode;
-    this.applyPeriodFilter();
   }
 
   changeMonth(value: string): void {
@@ -138,6 +148,55 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return 'w-[5%]';
   }
 
+  roleSummary(): string {
+    if (this.selectedPersona === 'tenant') {
+      return 'Track your dues, payment health, and upcoming actions in one place.';
+    }
+    if (this.selectedPersona === 'societyAdmin') {
+      return 'Monitor society operations, member health, and collection risk quickly.';
+    }
+    if (this.selectedPersona === 'vendor') {
+      return 'Stay on top of assigned work orders, completion pace, and payout readiness.';
+    }
+    return 'Monitor portfolio collection trends, occupancy, and high-priority follow-ups.';
+  }
+
+  pendingItems(vm: DashboardOverview): number {
+    return vm.charges.filter((item) => item.status !== 'Paid').length;
+  }
+
+  completionScore(vm: DashboardOverview): number {
+    if (!vm.collectionHealth.length) {
+      return 0;
+    }
+    const weighted = vm.collectionHealth.reduce((sum, item) => {
+      const weight =
+        item.tone === 'success'
+          ? 1.2
+          : item.tone === 'info'
+            ? 1
+            : item.tone === 'warning'
+              ? 0.6
+              : 0.4;
+      return sum + item.percent * weight;
+    }, 0);
+    const normalized = weighted / vm.collectionHealth.length;
+    return Math.max(0, Math.min(100, Math.round(normalized)));
+  }
+
+  focusLabel(vm: DashboardOverview): string {
+    if (!vm.collectionHealth.length) {
+      return 'No focus item';
+    }
+    const risky = vm.collectionHealth
+      .filter((item) => item.tone === 'warning' || item.tone === 'danger')
+      .sort((a, b) => b.percent - a.percent)[0];
+    if (risky) {
+      return risky.label;
+    }
+    return vm.collectionHealth[0].label;
+  }
+
   private initializePersonas(): void {
     const roles = this.auth.snapshotUser?.roles ?? [];
     const personas: DashboardPersona[] = [];
@@ -150,6 +209,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     if (roles.includes('societyAdmin')) {
       personas.push('societyAdmin');
+    }
+    if (roles.includes('vendor')) {
+      personas.push('vendor');
     }
 
     this.availablePersonas = personas.length ? personas : ['owner'];
@@ -180,10 +242,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const source = this.deepClone(this.baseData);
     const monthFactor = this.getMonthFactor(this.selectedMonth);
     const yearFactor = this.getYearFactor(this.selectedYear);
-    const monetaryFactor =
-      this.viewMode === 'yearly' ? yearFactor * 12 : monthFactor * yearFactor;
-    const countFactor =
-      this.viewMode === 'yearly' ? Math.max(1, yearFactor * 12) : monthFactor * yearFactor;
+    const monetaryFactor = monthFactor * yearFactor;
+    const countFactor = monthFactor * yearFactor;
 
     source.kpis = source.kpis.map((item) => ({
       ...item,
@@ -225,8 +285,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         ...row,
         rentDue: this.scaleMoney(row.rentDue, monetaryFactor),
         maintenanceDue: this.scaleMoney(row.maintenanceDue, monetaryFactor),
-        daysLate:
-          this.viewMode === 'yearly' ? Math.min(365, row.daysLate * 4) : row.daysLate,
+        daysLate: row.daysLate,
       }));
     }
 
@@ -243,12 +302,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return value;
     }
 
-    const scaled =
-      this.viewMode === 'yearly'
-        ? Math.round(numeric * countFactor)
-        : Math.max(0, Math.round(numeric * countFactor));
+    const scaled = Math.max(0, Math.round(numeric * countFactor));
 
-    return scaled.toLocaleString();
+    return scaled.toLocaleString(this.locale);
   }
 
   private scaleMoney(value: string, factor: number): string {
@@ -257,10 +313,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return value;
     }
 
-    return `$${(numeric * factor).toLocaleString(undefined, {
+    return new Intl.NumberFormat(this.locale, {
+      style: 'currency',
+      currency: this.currency,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    })}`;
+    }).format(numeric * factor);
+  }
+
+  formatMetric(value: string): string {
+    if (!value.includes('$')) {
+      return value;
+    }
+    const numeric = this.extractNumber(value);
+    if (numeric === null) {
+      return value;
+    }
+    return new Intl.NumberFormat(this.locale, {
+      style: 'currency',
+      currency: this.currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(numeric);
   }
 
   private extractNumber(value: string): number | null {

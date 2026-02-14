@@ -11,11 +11,11 @@
   <section class="r360-section grid grid-cols-1 gap-4 sm:grid-cols-3">
     <r360-card>
       <div class="text-xs uppercase tracking-wide text-gray-500">Paid</div>
-      <div class="mt-2 text-2xl font-bold text-success">${{ paidAmount | number: '1.2-2' }}</div>
+      <div class="mt-2 text-2xl font-bold text-success">{{ paidAmount | appCurrency }}</div>
     </r360-card>
     <r360-card>
       <div class="text-xs uppercase tracking-wide text-gray-500">Outstanding</div>
-      <div class="mt-2 text-2xl font-bold text-warning">${{ totalDueAmount | number: '1.2-2' }}</div>
+      <div class="mt-2 text-2xl font-bold text-warning">{{ totalDueAmount | appCurrency }}</div>
     </r360-card>
     <r360-card>
       <div class="text-xs uppercase tracking-wide text-gray-500">Pending Payments</div>
@@ -62,8 +62,8 @@
               <td class="r360-td">{{ row.tenantName }}</td>
               <td class="r360-td">{{ row.property }}</td>
               <td class="r360-td">{{ row.unit }}</td>
-              <td class="r360-td">{{ row.dueDate }}</td>
-              <td class="r360-td">${{ row.amount | number: '1.2-2' }}</td>
+              <td class="r360-td">{{ row.dueDate | appDate }}</td>
+              <td class="r360-td">{{ row.amount | appCurrency }}</td>
               <td class="r360-td">
                 <r360-status-badge [value]="row.status"></r360-status-badge>
               </td>

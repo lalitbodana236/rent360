@@ -3,31 +3,45 @@
     <r360-page-header [title]="'Good Morning, ' + userName" subtitle="Role-based overview"></r360-page-header>
 
     <section class="r360-section r360-panel">
-      <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <div class="flex flex-wrap items-center gap-2" *ngIf="availablePersonas.length > 1">
-          <button
-            *ngFor="let persona of availablePersonas"
-            type="button"
-            class="r360-chip"
-            [ngClass]="selectedPersona === persona ? 'r360-chip-active' : ''"
-            (click)="selectPersona(persona)"
-          >
-            {{ personaLabel(persona) }}
-          </button>
+      <div class="dashboard-toolbar">
+        <div class="dashboard-summary">
+          <div class="dashboard-role-line">
+            <span class="dashboard-role-pill">{{ viewLabel }}</span>
+          </div>
+          <p class="dashboard-summary-text">{{ roleSummary() }}</p>
+
+          <div class="flex flex-wrap items-center gap-2" *ngIf="availablePersonas.length > 1">
+            <button
+              *ngFor="let persona of availablePersonas"
+              type="button"
+              class="r360-chip"
+              [ngClass]="selectedPersona === persona ? 'r360-chip-active' : ''"
+              (click)="selectPersona(persona)"
+            >
+              {{ personaLabel(persona) }}
+            </button>
+          </div>
+
+          <div class="dashboard-mini-grid">
+            <div class="dashboard-mini-card">
+              <span class="dashboard-mini-label">Action Items</span>
+              <span class="dashboard-mini-value">{{ pendingItems(vm) }}</span>
+            </div>
+            <div class="dashboard-mini-card">
+              <span class="dashboard-mini-label">Completion Score</span>
+              <span class="dashboard-mini-value">{{ completionScore(vm) }}%</span>
+            </div>
+            <div class="dashboard-mini-card">
+              <span class="dashboard-mini-label">Priority Focus</span>
+              <span class="dashboard-mini-value">{{ focusLabel(vm) }}</span>
+            </div>
+          </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-3 xl:min-w-[430px]">
-          <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
-            View
-            <select class="r360-input mt-1 !py-1.5" [value]="viewMode" (change)="changeViewMode($any($event.target).value)">
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-          </label>
-
+        <div class="dashboard-filters">
           <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
             Month
-            <select class="r360-input mt-1 !py-1.5" [value]="selectedMonth" (change)="changeMonth($any($event.target).value)" [disabled]="viewMode === 'yearly'">
+            <select class="r360-input mt-1 !py-1.5" [value]="selectedMonth" (change)="changeMonth($any($event.target).value)">
               <option *ngFor="let month of monthOptions" [value]="month.value">{{ month.label }}</option>
             </select>
           </label>
@@ -47,7 +61,7 @@
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <r360-card *ngFor="let kpi of vm.kpis" class="block transition-shadow hover:shadow-md">
           <div class="mb-2 text-xs uppercase tracking-wide text-gray-500">{{ kpi.label }}</div>
-          <div class="r360-kpi-value">{{ kpi.value }}</div>
+          <div class="r360-kpi-value">{{ formatMetric(kpi.value) }}</div>
         </r360-card>
       </div>
     </section>
@@ -60,7 +74,7 @@
           <div class="space-y-2">
             <div class="flex items-center justify-between text-sm" *ngFor="let item of vm.adminView.ownerInsights">
               <span class="text-gray-500 dark:text-gray-300">{{ item.label }}</span>
-              <span class="font-semibold">{{ item.value }}</span>
+              <span class="font-semibold">{{ formatMetric(item.value) }}</span>
             </div>
           </div>
         </r360-card>
@@ -70,7 +84,7 @@
           <div class="space-y-2">
             <div class="flex items-center justify-between text-sm" *ngFor="let item of vm.adminView.tenantInsights">
               <span class="text-gray-500 dark:text-gray-300">{{ item.label }}</span>
-              <span class="font-semibold">{{ item.value }}</span>
+              <span class="font-semibold">{{ formatMetric(item.value) }}</span>
             </div>
           </div>
         </r360-card>
@@ -80,7 +94,7 @@
           <div class="space-y-2">
             <div class="flex items-center justify-between text-sm" *ngFor="let item of vm.adminView.operationsInsights">
               <span class="text-gray-500 dark:text-gray-300">{{ item.label }}</span>
-              <span class="font-semibold">{{ item.value }}</span>
+              <span class="font-semibold">{{ formatMetric(item.value) }}</span>
             </div>
           </div>
         </r360-card>
@@ -137,8 +151,8 @@
                 <td class="r360-td">{{ row.name }}</td>
                 <td class="r360-td">{{ row.property }}</td>
                 <td class="r360-td">{{ row.unit }}</td>
-                <td class="r360-td font-semibold text-danger">{{ row.rentDue }}</td>
-                <td class="r360-td font-semibold text-warning">{{ row.maintenanceDue }}</td>
+                <td class="r360-td font-semibold text-danger">{{ formatMetric(row.rentDue) }}</td>
+                <td class="r360-td font-semibold text-warning">{{ formatMetric(row.maintenanceDue) }}</td>
                 <td class="r360-td">{{ row.daysLate }}</td>
               </tr>
             </tbody>
@@ -178,18 +192,18 @@
       </div>
     </section>
 
-    <section class="r360-section" *ngIf="insights.length">
+    <section class="r360-section" *ngIf="insights.length && selectedPersona !== 'tenant'">
       <h3 class="mb-4 text-xl font-semibold">Cross-Module Intelligence</h3>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <r360-card *ngFor="let insight of insights" class="block">
           <div class="text-xs uppercase tracking-wide text-gray-500">{{ insight.title }}</div>
-          <div class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ insight.value }}</div>
+          <div class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ formatMetric(insight.value) }}</div>
           <p class="mt-2 text-sm text-gray-500 dark:text-gray-300">{{ insight.description }}</p>
         </r360-card>
       </div>
     </section>
 
-    <section class="grid grid-cols-1 gap-4 xl:grid-cols-5">
+    <section class="grid grid-cols-1 gap-4 xl:grid-cols-5" *ngIf="selectedPersona !== 'vendor'">
       <r360-card class="block xl:col-span-2">
         <h3 class="mb-6 text-xl font-semibold">Payments Overview</h3>
         <div *ngFor="let row of vm.collectionHealth" class="mb-5 last:mb-0">
@@ -230,7 +244,60 @@
           </thead>
           <tbody>
             <tr *ngFor="let c of vm.charges" class="r360-row">
-              <td class="r360-td">{{ c.amount }}</td>
+              <td class="r360-td">{{ formatMetric(c.amount) }}</td>
+              <td class="r360-td">{{ c.property }}</td>
+              <td class="r360-td">{{ c.unit }}</td>
+              <td class="r360-td">{{ c.description }}</td>
+              <td class="r360-td"><r360-status-badge [value]="c.status"></r360-status-badge></td>
+              <td class="r360-td"><a class="r360-action-link" href="#">{{ c.action }}</a></td>
+            </tr>
+          </tbody>
+        </r360-table>
+      </r360-card>
+    </section>
+
+    <section class="grid grid-cols-1 gap-4 xl:grid-cols-5" *ngIf="selectedPersona === 'vendor'">
+      <r360-card class="block xl:col-span-2">
+        <h3 class="mb-6 text-xl font-semibold">Task Completion Health</h3>
+        <div *ngFor="let row of vm.collectionHealth" class="mb-5 last:mb-0">
+          <div class="mb-2 flex items-center justify-between text-sm">
+            <span>{{ row.label }}</span>
+            <span>{{ row.percent }}%</span>
+          </div>
+          <div class="h-2 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
+            <div
+              class="h-full rounded-lg"
+              [ngClass]="[
+                widthClass(row.percent),
+                row.tone === 'success' ? 'bg-success' : '',
+                row.tone === 'info' ? 'bg-secondary' : '',
+                row.tone === 'warning' ? 'bg-warning' : '',
+                row.tone === 'danger' ? 'bg-danger' : ''
+              ]"
+            ></div>
+          </div>
+        </div>
+      </r360-card>
+
+      <r360-card class="block xl:col-span-3">
+        <div class="mb-6 flex items-center justify-between">
+          <h3 class="text-xl font-semibold">{{ chargesTitle }}</h3>
+          <r360-pagination></r360-pagination>
+        </div>
+        <r360-table>
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th class="r360-th">Payout</th>
+              <th class="r360-th">Property</th>
+              <th class="r360-th">Unit</th>
+              <th class="r360-th">Task</th>
+              <th class="r360-th">Status</th>
+              <th class="r360-th">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of vm.charges" class="r360-row">
+              <td class="r360-td">{{ formatMetric(c.amount) }}</td>
               <td class="r360-td">{{ c.property }}</td>
               <td class="r360-td">{{ c.unit }}</td>
               <td class="r360-td">{{ c.description }}</td>

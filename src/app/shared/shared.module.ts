@@ -20,6 +20,7 @@ import { SidebarGroupComponent } from './components/sidebar-group/sidebar-group.
 import { CanDirective } from './directives/can.directive';
 import { RoleDirective } from './directives/role.directive';
 import { AppCurrencyPipe } from './pipes/app-currency.pipe';
+import { AppDatePipe } from './pipes/app-date.pipe';
 
 @NgModule({
   declarations: [
@@ -41,6 +42,7 @@ import { AppCurrencyPipe } from './pipes/app-currency.pipe';
     CanDirective,
     RoleDirective,
     AppCurrencyPipe,
+    AppDatePipe,
   ],
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   exports: [
@@ -65,6 +67,7 @@ import { AppCurrencyPipe } from './pipes/app-currency.pipe';
     CanDirective,
     RoleDirective,
     AppCurrencyPipe,
+    AppDatePipe,
   ],
 })
 export class SharedModule {}

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 import { ApiClientService } from './api-client.service';
 
 export interface UserSettings {
@@ -40,10 +41,11 @@ const DEFAULT_SETTINGS: UserSettings = {
   notifyInApp: true,
   whatsAppNumber: '+1 555-1234',
 };
+const USER_SETTINGS_STORE_KEY = 'r360_user_settings';
 
 @Injectable()
 export class UserSettingsService {
-  private readonly subject = new BehaviorSubject<UserSettings>(DEFAULT_SETTINGS);
+  private readonly subject = new BehaviorSubject<UserSettings>(this.readStoredSettings());
   readonly userSettings$ = this.subject.asObservable();
 
   constructor(private readonly apiClient: ApiClientService) {}
@@ -67,16 +69,44 @@ export class UserSettingsService {
           }),
         ),
         tap((settings) => {
-          this.subject.next({ ...this.subject.value, ...settings });
+          this.patchSettings({ ...this.subject.value, ...settings });
         }),
       );
   }
 
   updateSettings(settings: Partial<UserSettings>): void {
-    this.subject.next({ ...this.subject.value, ...settings });
+    this.patchSettings({ ...this.subject.value, ...settings });
   }
 
   reset(): void {
-    this.subject.next(DEFAULT_SETTINGS);
+    this.patchSettings(DEFAULT_SETTINGS);
+  }
+
+  private patchSettings(next: UserSettings): void {
+    this.subject.next(next);
+    if (!environment.accessControl.enableClientPermissionOverrides) {
+      return;
+    }
+    try {
+      localStorage.setItem(USER_SETTINGS_STORE_KEY, JSON.stringify(next));
+    } catch {
+      // Ignore private mode / quota issues for local settings storage.
+    }
+  }
+
+  private readStoredSettings(): UserSettings {
+    if (!environment.accessControl.enableClientPermissionOverrides) {
+      return DEFAULT_SETTINGS;
+    }
+    try {
+      const raw = localStorage.getItem(USER_SETTINGS_STORE_KEY);
+      if (!raw) {
+        return DEFAULT_SETTINGS;
+      }
+      const parsed = JSON.parse(raw) as Partial<UserSettings>;
+      return { ...DEFAULT_SETTINGS, ...parsed };
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
   }
 }

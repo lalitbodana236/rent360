@@ -1,1 +1,93 @@
 
+.dashboard-toolbar {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-summary {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dashboard-role-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dashboard-role-pill {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgb(191 219 254);
+  background: rgb(239 246 255);
+  color: rgb(30 64 175);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-summary-text {
+  font-size: 0.9rem;
+  color: rgb(75 85 99);
+  max-width: 48rem;
+}
+
+.dashboard-mini-grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.dashboard-mini-card {
+  border: 1px solid rgb(229 231 235);
+  border-radius: 0.75rem;
+  background: rgb(255 255 255);
+  padding: 0.65rem 0.8rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.dashboard-mini-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgb(107 114 128);
+}
+
+.dashboard-mini-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgb(17 24 39);
+}
+
+.dashboard-filters {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .dashboard-mini-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .dashboard-toolbar {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+
+  .dashboard-filters {
+    justify-self: end;
+    width: 100%;
+  }
+}
