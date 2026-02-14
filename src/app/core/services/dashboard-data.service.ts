@@ -4,8 +4,10 @@ import { map } from 'rxjs/operators';
 import { UserRole } from './auth.service';
 import { ApiClientService } from './api-client.service';
 
+export type DashboardPersona = 'owner' | 'tenant' | 'societyAdmin';
+
 export interface DashboardOverview {
-  role: UserRole;
+  role: DashboardPersona;
   kpis: { label: string; value: string }[];
   collectionHealth: {
     label: string;
@@ -27,13 +29,31 @@ export class DashboardDataService {
   constructor(private readonly apiClient: ApiClientService) {}
 
   getOverviewByRole(role: UserRole): Observable<DashboardOverview> {
-    const normalizedRole = role === 'tenant' ? 'tenant' : 'owner';
+    const persona = this.toPersona(role);
+    const fileKey = this.personaToFileKey(persona);
 
     return this.apiClient
       .get<DashboardOverview>({
-        endpoint: `dashboard/overview/${normalizedRole}`,
-        mockPath: `dashboard/overview-${normalizedRole}.json`,
+        endpoint: `dashboard/overview/${fileKey}`,
+        mockPath: `dashboard/overview-${fileKey}.json`,
       })
-      .pipe(map((data) => ({ ...data, role: normalizedRole })));
+      .pipe(map((data) => ({ ...data, role: persona })));
+  }
+
+  private toPersona(role: UserRole): DashboardPersona {
+    if (role === 'tenant') {
+      return 'tenant';
+    }
+    if (role === 'societyAdmin') {
+      return 'societyAdmin';
+    }
+    return 'owner';
+  }
+
+  private personaToFileKey(persona: DashboardPersona): string {
+    if (persona === 'societyAdmin') {
+      return 'society-admin';
+    }
+    return persona;
   }
 }

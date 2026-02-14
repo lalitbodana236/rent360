@@ -28,7 +28,7 @@
       "mobileNumber": "+1 555-3003",
       "address": "33 Hybrid Blvd",
       "currency": "USD",
-      "roles": ["owner", "tenant"]
+      "roles": ["owner", "tenant", "societyAdmin"]
     }
   ]
 }

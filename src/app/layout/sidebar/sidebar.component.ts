@@ -15,13 +15,19 @@ type SidebarIcon =
   | 'chart'
   | 'settings'
   | 'help'
-  | 'logout';
+  | 'logout'
+  | 'layers';
+
+interface SidebarChild {
+  label: string;
+  route: string;
+}
 
 interface SidebarItem {
   label: string;
   route: string;
   icon: SidebarIcon;
-  children?: { label: string; route: string }[];
+  children?: SidebarChild[];
 }
 
 @Component({
@@ -33,7 +39,8 @@ export class SidebarComponent {
   @Input() collapsed = false;
   readonly user$ = this.settings.userSettings$;
 
-  paymentsExpanded = true;
+  // Keep menus collapsed by default; user can expand as needed.
+  readonly expandedGroups = new Set<string>();
 
   readonly items: SidebarItem[] = [
     { label: 'Dashboard', route: '/dashboard', icon: 'home' },
@@ -50,8 +57,34 @@ export class SidebarComponent {
       ],
     },
     { label: 'Tenants', route: '/tenants', icon: 'users' },
-    { label: 'Maintenance', route: '/society', icon: 'tool' },
-    { label: 'Leasing', route: '/marketplace', icon: 'key' },
+    {
+      label: 'Society',
+      route: '/society',
+      icon: 'layers',
+      children: [
+        { label: 'Buildings', route: '/society/buildings' },
+        { label: 'Flats', route: '/society/flats' },
+        { label: 'Parking', route: '/society/parking' },
+        { label: 'Maintenance', route: '/society/maintenance-collection' },
+        { label: 'Meetings', route: '/society/meetings' },
+        { label: 'Notices', route: '/society/notices' },
+        { label: 'Visitors', route: '/society/visitors' },
+        { label: 'Complaints', route: '/society/complaints' },
+        { label: 'Work Orders', route: '/society/work-orders' },
+      ],
+    },
+    {
+      label: 'Marketplace',
+      route: '/marketplace',
+      icon: 'key',
+      children: [
+        { label: 'Listings', route: '/marketplace/listings' },
+        { label: 'Property Detail', route: '/marketplace/property-detail' },
+        { label: 'Media Gallery', route: '/marketplace/media-gallery' },
+        { label: 'Inquiries', route: '/marketplace/inquiries' },
+        { label: 'Favorites', route: '/marketplace/favorites' },
+      ],
+    },
     { label: 'Communications', route: '/reports/communications', icon: 'chat' },
     { label: 'Tasks', route: '/reports/tasks', icon: 'task' },
     { label: 'Reports', route: '/reports', icon: 'chart' },
@@ -80,13 +113,22 @@ export class SidebarComponent {
         'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6 M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3',
       help: 'M12 18h.01 M10 9a2 2 0 1 1 3.8.8c-.5.8-1.3 1.2-1.8 1.7-.3.3-.5.6-.5 1.5 M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20',
       logout: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9',
+      layers: 'M12 2 2 7l10 5 10-5-10-5z M2 12l10 5 10-5 M2 17l10 5 10-5',
     };
 
     return map[icon];
   }
 
-  togglePayments(): void {
-    this.paymentsExpanded = !this.paymentsExpanded;
+  toggleGroup(label: string): void {
+    if (this.expandedGroups.has(label)) {
+      this.expandedGroups.delete(label);
+      return;
+    }
+    this.expandedGroups.add(label);
+  }
+
+  isGroupExpanded(label: string): boolean {
+    return this.expandedGroups.has(label);
   }
 
   logout(): void {

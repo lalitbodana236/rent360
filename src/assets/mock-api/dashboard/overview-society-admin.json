@@ -1,0 +1,20 @@
+{
+  "role": "societyAdmin",
+  "kpis": [
+    { "label": "Managed Buildings", "value": "8" },
+    { "label": "Open Work Orders", "value": "23" },
+    { "label": "Defaulter Accounts", "value": "11" },
+    { "label": "Visitor Entries Today", "value": "54" }
+  ],
+  "collectionHealth": [
+    { "label": "Collected", "percent": 79, "tone": "success" },
+    { "label": "On Schedule", "percent": 74, "tone": "info" },
+    { "label": "Overdue", "percent": 21, "tone": "warning" },
+    { "label": "Critical", "percent": 7, "tone": "danger" }
+  ],
+  "charges": [
+    { "amount": "$480.00", "property": "Block A", "unit": "A-104", "description": "Maintenance due", "status": "Due", "action": "Follow up" },
+    { "amount": "$320.00", "property": "Block B", "unit": "B-202", "description": "Late fee", "status": "Late", "action": "Notice" },
+    { "amount": "$160.00", "property": "Block C", "unit": "C-109", "description": "Visitor parking", "status": "Paid", "action": "View" }
+  ]
+}

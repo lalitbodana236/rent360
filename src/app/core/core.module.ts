@@ -7,6 +7,10 @@ import { FeatureFlagsService } from './services/feature-flags.service';
 import { UserSettingsService } from './services/user-settings.service';
 import { DashboardDataService } from './services/dashboard-data.service';
 import { ThemeService } from './services/theme.service';
+import { RentalTrackingService } from './services/rental-tracking.service';
+import { SocietyManagementService } from './services/society-management.service';
+import { MarketplaceDataService } from './services/marketplace-data.service';
+import { PlatformInsightsService } from './services/platform-insights.service';
 
 @NgModule({
   imports: [CommonModule],
@@ -18,6 +22,10 @@ import { ThemeService } from './services/theme.service';
     UserSettingsService,
     DashboardDataService,
     ThemeService,
+    RentalTrackingService,
+    SocietyManagementService,
+    MarketplaceDataService,
+    PlatformInsightsService,
   ],
 })
 export class CoreModule {

@@ -1,7 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { DashboardDataService, DashboardOverview } from '../../core/services/dashboard-data.service';
+import {
+  DashboardDataService,
+  DashboardOverview,
+  DashboardPersona,
+} from '../../core/services/dashboard-data.service';
 import { AuthService, UserRole } from '../../core/services/auth.service';
 import { UserSettingsService } from '../../core/services/user-settings.service';
+import { PlatformInsight, PlatformInsightsService } from '../../core/services/platform-insights.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -10,12 +15,17 @@ import { UserSettingsService } from '../../core/services/user-settings.service';
 })
 export class DashboardComponent implements OnInit {
   data: DashboardOverview | null = null;
+  insights: PlatformInsight[] = [];
   userName = 'User';
+
+  availablePersonas: DashboardPersona[] = [];
+  selectedPersona: DashboardPersona = 'owner';
 
   constructor(
     private readonly dashboardData: DashboardDataService,
     private readonly settings: UserSettingsService,
     private readonly auth: AuthService,
+    private readonly platformInsights: PlatformInsightsService,
   ) {}
 
   ngOnInit(): void {
@@ -23,18 +33,46 @@ export class DashboardComponent implements OnInit {
       this.userName = user.fullName;
     });
 
-    const role = this.resolveRole();
-    this.dashboardData.getOverviewByRole(role).subscribe((res) => {
-      this.data = res;
-    });
+    this.initializePersonas();
+    this.loadPersona(this.selectedPersona);
   }
 
   get viewLabel(): string {
-    return this.data?.role === 'tenant' ? 'Tenant View' : 'Owner View';
+    if (this.selectedPersona === 'tenant') {
+      return 'Tenant View';
+    }
+    if (this.selectedPersona === 'societyAdmin') {
+      return 'Society Admin View';
+    }
+    return 'Owner View';
   }
 
   get chargesTitle(): string {
-    return this.data?.role === 'tenant' ? 'Your Charges' : 'Owner Charges';
+    if (this.selectedPersona === 'tenant') {
+      return 'Your Charges';
+    }
+    if (this.selectedPersona === 'societyAdmin') {
+      return 'Society Billing';
+    }
+    return 'Owner Charges';
+  }
+
+  personaLabel(persona: DashboardPersona): string {
+    if (persona === 'tenant') {
+      return 'Tenant';
+    }
+    if (persona === 'societyAdmin') {
+      return 'Society Admin';
+    }
+    return 'Owner';
+  }
+
+  selectPersona(persona: DashboardPersona): void {
+    if (this.selectedPersona === persona) {
+      return;
+    }
+    this.selectedPersona = persona;
+    this.loadPersona(persona);
   }
 
   widthClass(percent: number): string {
@@ -50,13 +88,39 @@ export class DashboardComponent implements OnInit {
     return 'w-[5%]';
   }
 
-  private resolveRole(): UserRole {
-    if (this.auth.hasRole('tenant')) {
-      return 'tenant';
+  private initializePersonas(): void {
+    const roles = this.auth.snapshotUser?.roles ?? [];
+    const personas: DashboardPersona[] = [];
+
+    if (roles.includes('owner')) {
+      personas.push('owner');
     }
-    if (this.auth.hasRole('owner')) {
-      return 'owner';
+    if (roles.includes('tenant')) {
+      personas.push('tenant');
     }
-    return 'owner';
+    if (roles.includes('societyAdmin')) {
+      personas.push('societyAdmin');
+    }
+
+    this.availablePersonas = personas.length ? personas : ['owner'];
+
+    const preferred = this.settings.snapshot.defaultDashboard;
+    if (preferred === 'tenant' && this.availablePersonas.includes('tenant')) {
+      this.selectedPersona = 'tenant';
+    } else {
+      this.selectedPersona = this.availablePersonas[0];
+    }
+  }
+
+  private loadPersona(persona: DashboardPersona): void {
+    const asUserRole = persona as UserRole;
+
+    this.dashboardData.getOverviewByRole(asUserRole).subscribe((res) => {
+      this.data = res;
+    });
+
+    this.platformInsights.getInsights(asUserRole).subscribe((items) => {
+      this.insights = items;
+    });
   }
 }
