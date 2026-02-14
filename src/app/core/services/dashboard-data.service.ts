@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UserRole, AuthService } from './auth.service';
 import { ApiClientService } from './api-client.service';
 import { environment } from '../../../environments/environment';
 import { MOCK_PROPERTIES_STORE_KEY } from '../constants/mock-storage-keys';
+import { API_ENDPOINTS } from '../constants/api-endpoints';
+import { PlatformInsight, PlatformInsightsService } from './platform-insights.service';
 
 export type DashboardPersona = 'owner' | 'tenant' | 'societyAdmin';
 
@@ -51,6 +53,12 @@ interface PropertyRecord {
   units: PropertyUnitRecord[];
 }
 
+interface DashboardAggregateResponse {
+  role?: DashboardPersona;
+  overview: Omit<DashboardOverview, 'role'>;
+  insights: PlatformInsight[];
+}
+
 export interface DashboardOverview {
   role: DashboardPersona;
   kpis: { label: string; value: string }[];
@@ -77,12 +85,38 @@ export interface DashboardOverview {
   };
 }
 
+export interface DashboardScreenData {
+  overview: DashboardOverview;
+  insights: PlatformInsight[];
+}
+
 @Injectable()
 export class DashboardDataService {
   constructor(
     private readonly apiClient: ApiClientService,
     private readonly auth: AuthService,
+    private readonly platformInsights: PlatformInsightsService,
   ) {}
+
+  getScreenData(role: UserRole): Observable<DashboardScreenData> {
+    const persona = this.toPersona(role);
+    const fileKey = this.personaToFileKey(persona);
+
+    if (!environment.api.useMockApi) {
+      return this.apiClient
+        .get<DashboardAggregateResponse>({
+          endpoint: API_ENDPOINTS.dashboard.aggregate,
+          mockPath: `dashboard/aggregate-${fileKey}.json`,
+          params: { role: fileKey },
+        })
+        .pipe(map((response) => this.adaptAggregateResponse(response, persona)));
+    }
+
+    return forkJoin({
+      overview: this.getOverviewByRole(role),
+      insights: this.platformInsights.getInsights(role),
+    });
+  }
 
   getOverviewByRole(role: UserRole): Observable<DashboardOverview> {
     const persona = this.toPersona(role);
@@ -90,13 +124,32 @@ export class DashboardDataService {
 
     return this.apiClient
       .get<DashboardOverview>({
-        endpoint: `dashboard/overview/${fileKey}`,
+        endpoint: API_ENDPOINTS.dashboard.overview(fileKey),
         mockPath: `dashboard/overview-${fileKey}.json`,
       })
       .pipe(
         map((data) => ({ ...data, role: persona })),
         map((overview) => this.linkPropertiesData(overview, persona)),
       );
+  }
+
+  private adaptAggregateResponse(
+    response: DashboardAggregateResponse,
+    fallbackPersona: DashboardPersona,
+  ): DashboardScreenData {
+    const persona = response.role ?? fallbackPersona;
+    const overview: DashboardOverview = {
+      role: persona,
+      kpis: response.overview?.kpis ?? [],
+      collectionHealth: response.overview?.collectionHealth ?? [],
+      charges: response.overview?.charges ?? [],
+      adminView: response.overview?.adminView,
+    };
+
+    return {
+      overview,
+      insights: response.insights ?? [],
+    };
   }
 
   private toPersona(role: UserRole): DashboardPersona {

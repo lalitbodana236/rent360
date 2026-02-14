@@ -6,10 +6,7 @@ import {
 } from '../../core/services/dashboard-data.service';
 import { AuthService, UserRole } from '../../core/services/auth.service';
 import { UserSettingsService } from '../../core/services/user-settings.service';
-import {
-  PlatformInsight,
-  PlatformInsightsService,
-} from '../../core/services/platform-insights.service';
+import { PlatformInsight } from '../../core/services/platform-insights.service';
 import { DataRefreshService } from '../../core/services/data-refresh.service';
 import { Subscription } from 'rxjs';
 
@@ -51,7 +48,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private readonly dashboardData: DashboardDataService,
     private readonly settings: UserSettingsService,
     private readonly auth: AuthService,
-    private readonly platformInsights: PlatformInsightsService,
     private readonly refresh: DataRefreshService,
   ) {}
 
@@ -169,13 +165,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private loadPersona(persona: DashboardPersona): void {
     const asUserRole = persona as UserRole;
 
-    this.dashboardData.getOverviewByRole(asUserRole).subscribe((res) => {
-      this.baseData = res;
+    this.dashboardData.getScreenData(asUserRole).subscribe((screenData) => {
+      this.baseData = screenData.overview;
+      this.insights = screenData.insights;
       this.applyPeriodFilter();
-    });
-
-    this.platformInsights.getInsights(asUserRole).subscribe((items) => {
-      this.insights = items;
     });
   }
 
