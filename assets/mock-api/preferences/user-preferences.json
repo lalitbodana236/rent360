@@ -23,6 +23,94 @@
       "address": "33 Hybrid Blvd",
       "currency": "USD",
       "defaultDashboard": "owner"
+    },
+    {
+      "fullName": "Sam Society Admin",
+      "email": "society@rent360.com",
+      "mobileNumber": "+1 555-4004",
+      "address": "44 Society Road",
+      "currency": "USD",
+      "defaultDashboard": "owner"
+    },
+    {
+      "fullName": "Victor Vendor",
+      "email": "vendor@rent360.com",
+      "mobileNumber": "+1 555-5005",
+      "address": "55 Vendor Lane",
+      "currency": "USD",
+      "defaultDashboard": "owner"
+    },
+    {
+      "fullName": "Sia Security",
+      "email": "security@rent360.com",
+      "mobileNumber": "+1 555-6006",
+      "address": "66 Security Park",
+      "currency": "USD",
+      "defaultDashboard": "owner"
+    },
+    {
+      "fullName": "Paula Public",
+      "email": "public@rent360.com",
+      "mobileNumber": "+1 555-7007",
+      "address": "77 Public Square",
+      "currency": "USD",
+      "defaultDashboard": "owner"
+    },
+    {
+      "fullName": "Nina Owner Tenant",
+      "email": "owner-tenant@rent360.com",
+      "mobileNumber": "+1 555-8008",
+      "address": "88 Duo Avenue",
+      "currency": "USD",
+      "defaultDashboard": "tenant"
+    },
+    {
+      "fullName": "Ari Owner Society",
+      "email": "owner-society@rent360.com",
+      "mobileNumber": "+1 555-9009",
+      "address": "99 Admin Street",
+      "currency": "USD",
+      "defaultDashboard": "owner"
+    },
+    {
+      "fullName": "Tina Tenant Society",
+      "email": "tenant-society@rent360.com",
+      "mobileNumber": "+1 555-1010",
+      "address": "1010 Tenant Circle",
+      "currency": "USD",
+      "defaultDashboard": "tenant"
+    },
+    {
+      "fullName": "Vera Society Vendor",
+      "email": "society-vendor@rent360.com",
+      "mobileNumber": "+1 555-1111",
+      "address": "1111 Services Way",
+      "currency": "USD",
+      "defaultDashboard": "owner"
+    },
+    {
+      "fullName": "Rico Security Vendor",
+      "email": "security-vendor@rent360.com",
+      "mobileNumber": "+1 555-1212",
+      "address": "1212 Patrol Drive",
+      "currency": "USD",
+      "defaultDashboard": "owner"
+    },
+    {
+      "fullName": "Alex Super Combo",
+      "email": "allroles@rent360.com",
+      "mobileNumber": "+1 555-1313",
+      "address": "1313 Infinity Loop",
+      "currency": "USD",
+      "defaultDashboard": "tenant"
+    },
+    {
+      "fullName": "Aiden Admin",
+      "email": "admin@rent360.com",
+      "mobileNumber": "+1 555-1414",
+      "address": "1414 Admin Plaza",
+      "currency": "USD",
+      "defaultDashboard": "owner"
     }
   ]
 }
