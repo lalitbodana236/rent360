@@ -5,23 +5,53 @@ import { environment } from '../../../environments/environment';
 import { ApiClientService } from '../../core/services/api-client.service';
 import { MOCK_PROPERTIES_STORE_KEY } from '../../core/constants/mock-storage-keys';
 import { DataRefreshService } from '../../core/services/data-refresh.service';
+import { API_ENDPOINTS } from '../../core/constants/api-endpoints';
 
 export type PropertyStatus = 'active' | 'inactive';
 export type UnitOccupancyStatus = 'occupied' | 'vacant' | 'maintenance';
+export type FurnishingType = 'furnished' | 'semi-furnished' | 'unfurnished';
+export type BHKType = 'studio' | '1BHK' | '2BHK' | '3BHK' | '4BHK' | '5BHK+';
+
+export interface UnitMedia {
+  id: string;
+  type: 'image' | 'video';
+  url: string;
+  title: string;
+}
+
+export interface UnitParkingInfo {
+  twoWheelerSlots: number;
+  fourWheelerSlots: number;
+}
+
+export interface UnitUtilities {
+  electricityProvider: string;
+  meterNumber: string;
+  gasLine: 'yes' | 'no';
+  waterSupply: 'corporation' | 'borewell' | 'mixed';
+}
 
 export interface UnitRecord {
   id: string;
   unitCode: string;
   type: string;
+  configuration: BHKType;
+  furnishing: FurnishingType;
   rent: number;
   occupancyStatus: UnitOccupancyStatus;
   tenantName: string;
+  carpetAreaSqFt: number;
+  parking: UnitParkingInfo;
+  utilities: UnitUtilities;
+  media: UnitMedia[];
 }
 
 export interface PropertyRecord {
   id: string;
   name: string;
   city: string;
+  address: string;
+  description: string;
   ownerName: string;
   status: PropertyStatus;
   units: UnitRecord[];
@@ -34,12 +64,29 @@ interface PropertiesApiResponse {
 export interface PropertyCreatePayload {
   name: string;
   city: string;
+  address: string;
+  description: string;
   ownerName: string;
   status: PropertyStatus;
 }
 
 export interface PropertyUpdatePayload extends PropertyCreatePayload {
   id: string;
+}
+
+export interface UnitUpsertPayload {
+  id?: string;
+  propertyId: string;
+  unitCode: string;
+  configuration: BHKType;
+  furnishing: FurnishingType;
+  rent: number;
+  occupancyStatus: UnitOccupancyStatus;
+  tenantName: string;
+  carpetAreaSqFt: number;
+  parking: UnitParkingInfo;
+  utilities: UnitUtilities;
+  media: UnitMedia[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -62,18 +109,18 @@ export class PropertiesDataService {
       const saved = this.readMockStore();
       if (saved) {
         this.initialized = true;
-        this.state$.next(saved);
+        this.state$.next(this.normalizeProperties(saved));
         return this.state$.asObservable();
       }
     }
 
     return this.apiClient
       .get<PropertiesApiResponse>({
-        endpoint: 'properties/units',
+        endpoint: API_ENDPOINTS.properties.list,
         mockPath: 'properties/units.json',
       })
       .pipe(
-        map((res) => res.properties ?? []),
+        map((res) => this.normalizeProperties(res.properties ?? [])),
         tap((rows) => {
           this.initialized = true;
           this.state$.next(rows);
@@ -86,13 +133,15 @@ export class PropertiesDataService {
 
   createProperty(payload: PropertyCreatePayload): Observable<PropertyRecord> {
     if (!environment.api.useMockApi) {
-      return this.apiClient.post<PropertyRecord>('properties', payload);
+      return this.apiClient.post<PropertyRecord>(API_ENDPOINTS.properties.create, payload);
     }
 
     const created: PropertyRecord = {
       id: this.makeId('prop'),
       name: payload.name.trim(),
       city: payload.city.trim(),
+      address: payload.address.trim(),
+      description: payload.description.trim(),
       ownerName: payload.ownerName.trim(),
       status: payload.status,
       units: [],
@@ -120,6 +169,8 @@ export class PropertiesDataService {
         ...item,
         name: payload.name.trim(),
         city: payload.city.trim(),
+        address: payload.address.trim(),
+        description: payload.description.trim(),
         ownerName: payload.ownerName.trim(),
         status: payload.status,
       };
@@ -137,8 +188,111 @@ export class PropertiesDataService {
     return of(updated);
   }
 
+  upsertUnit(payload: UnitUpsertPayload): Observable<UnitRecord> {
+    if (!environment.api.useMockApi) {
+      if (payload.id) {
+        return this.apiClient.put<UnitRecord>(
+          `properties/${payload.propertyId}/units/${payload.id}`,
+          payload,
+        );
+      }
+      return this.apiClient.post<UnitRecord>(`properties/${payload.propertyId}/units`, payload);
+    }
+
+    const normalizedMedia = payload.media
+      .filter((item) => item.url.trim().length > 0)
+      .map((item) => ({ ...item, url: item.url.trim(), title: item.title.trim() }));
+
+    const normalizedUnit: UnitRecord = {
+      id: payload.id ?? this.makeId('unit'),
+      unitCode: payload.unitCode.trim(),
+      configuration: payload.configuration,
+      type: payload.configuration,
+      furnishing: payload.furnishing,
+      rent: Number(payload.rent) || 0,
+      occupancyStatus: payload.occupancyStatus,
+      tenantName: payload.tenantName.trim(),
+      carpetAreaSqFt: Number(payload.carpetAreaSqFt) || 0,
+      parking: {
+        twoWheelerSlots: Number(payload.parking.twoWheelerSlots) || 0,
+        fourWheelerSlots: Number(payload.parking.fourWheelerSlots) || 0,
+      },
+      utilities: {
+        electricityProvider: payload.utilities.electricityProvider.trim(),
+        meterNumber: payload.utilities.meterNumber.trim(),
+        gasLine: payload.utilities.gasLine,
+        waterSupply: payload.utilities.waterSupply,
+      },
+      media: normalizedMedia,
+    };
+
+    let foundProperty = false;
+    const next = this.state$.value.map((property) => {
+      if (property.id !== payload.propertyId) {
+        return property;
+      }
+
+      foundProperty = true;
+      const existingIndex = property.units.findIndex((unit) => unit.id === normalizedUnit.id);
+      if (existingIndex === -1) {
+        return { ...property, units: [...property.units, normalizedUnit] };
+      }
+
+      const units = [...property.units];
+      units[existingIndex] = normalizedUnit;
+      return { ...property, units };
+    });
+
+    if (!foundProperty) {
+      throw new Error('Property not found for unit operation.');
+    }
+
+    this.state$.next(next);
+    this.writeMockStore(next);
+    this.refresh.notifyPropertiesChanged();
+    return of(normalizedUnit);
+  }
+
+  private normalizeProperties(rows: PropertyRecord[]): PropertyRecord[] {
+    return rows.map((property) => ({
+      ...property,
+      address: property.address ?? '',
+      description: property.description ?? '',
+      units: (property.units ?? []).map((unit) => this.normalizeUnit(unit)),
+    }));
+  }
+
+  private normalizeUnit(unit: UnitRecord): UnitRecord {
+    const configuration = (unit.configuration ?? unit.type ?? '1BHK') as BHKType;
+    const furnishing = (unit.furnishing ?? 'unfurnished') as FurnishingType;
+
+    return {
+      ...unit,
+      configuration,
+      type: unit.type ?? configuration,
+      furnishing,
+      carpetAreaSqFt: Number(unit.carpetAreaSqFt ?? 0),
+      parking: {
+        twoWheelerSlots: Number(unit.parking?.twoWheelerSlots ?? 0),
+        fourWheelerSlots: Number(unit.parking?.fourWheelerSlots ?? 0),
+      },
+      utilities: {
+        electricityProvider: unit.utilities?.electricityProvider ?? '',
+        meterNumber: unit.utilities?.meterNumber ?? '',
+        gasLine: unit.utilities?.gasLine ?? 'no',
+        waterSupply: unit.utilities?.waterSupply ?? 'corporation',
+      },
+      media: (unit.media ?? []).map((item, index) => ({
+        id: item.id ?? `${unit.id}-media-${index + 1}`,
+        type: item.type,
+        url: item.url,
+        title: item.title ?? '',
+      })),
+    };
+  }
+
   private makeId(prefix: string): string {
-    return `${prefix}-${Date.now()}`;
+    return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   }
 
   private readMockStore(): PropertyRecord[] | null {
@@ -166,3 +320,4 @@ export class PropertiesDataService {
     }
   }
 }
+

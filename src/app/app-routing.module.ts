@@ -46,7 +46,7 @@ const routes: Routes = [
           import('./features/properties/properties.module').then(
             (m) => m.PropertiesModule,
           ),
-        data: { roles: ['owner', 'societyAdmin'] },
+        data: { roles: ['owner', 'societyAdmin', 'tenant'] },
       },
       {
         path: 'tenants',
@@ -73,7 +73,7 @@ const routes: Routes = [
           import('./features/reports/reports.module').then(
             (m) => m.ReportsModule,
           ),
-        data: { roles: ['owner', 'societyAdmin'] },
+        data: { roles: ['owner', 'societyAdmin', 'tenant'] },
       },
       {
         path: 'settings',
@@ -102,3 +102,4 @@ const routes: Routes = [
   exports: [RouterModule],
 })
 export class AppRoutingModule {}
+

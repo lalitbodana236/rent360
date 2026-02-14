@@ -1,12 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
+import { AuthService } from '../../core/services/auth.service';
 import {
+  BHKType,
+  FurnishingType,
   PropertiesDataService,
   PropertyCreatePayload,
   PropertyRecord,
   PropertyStatus,
   PropertyUpdatePayload,
+  UnitOccupancyStatus,
   UnitRecord,
+  UnitUpsertPayload,
 } from './properties-data.service';
 
 interface UnitTableRow {
@@ -14,6 +19,8 @@ interface UnitTableRow {
   propertyName: string;
   propertyStatus: PropertyStatus;
   city: string;
+  address: string;
+  description: string;
   ownerName: string;
   unit?: UnitRecord;
 }
@@ -31,21 +38,50 @@ export class PropertiesComponent implements OnInit {
   selectedProperty = 'All';
   selectedStatus: 'All' | PropertyStatus = 'All';
 
-  showForm = false;
-  editMode = false;
-  editingId = '';
+  showPropertyForm = false;
+  showUnitForm = false;
+  editPropertyMode = false;
+  editUnitMode = false;
+  editingPropertyId = '';
+  editingUnitId = '';
+  selectedRow: UnitTableRow | null = null;
   formSubmitting = false;
 
-  readonly form = this.fb.group({
+  readonly bhkOptions: BHKType[] = ['studio', '1BHK', '2BHK', '3BHK', '4BHK', '5BHK+'];
+  readonly furnishingOptions: FurnishingType[] = ['unfurnished', 'semi-furnished', 'furnished'];
+
+  readonly propertyForm = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
     city: ['', [Validators.required, Validators.minLength(2)]],
+    address: ['', [Validators.required, Validators.minLength(5)]],
+    description: ['', [Validators.required, Validators.minLength(5)]],
     ownerName: ['', [Validators.required, Validators.minLength(2)]],
     status: ['active' as PropertyStatus, Validators.required],
+  });
+
+  readonly unitForm = this.fb.group({
+    propertyId: ['', Validators.required],
+    unitCode: ['', [Validators.required, Validators.minLength(2)]],
+    configuration: ['1BHK' as BHKType, Validators.required],
+    furnishing: ['unfurnished' as FurnishingType, Validators.required],
+    rent: [0, [Validators.required, Validators.min(0)]],
+    occupancyStatus: ['vacant' as UnitOccupancyStatus, Validators.required],
+    tenantName: [''],
+    carpetAreaSqFt: [0, [Validators.required, Validators.min(0)]],
+    parkingTwoWheeler: [0, [Validators.required, Validators.min(0)]],
+    parkingFourWheeler: [0, [Validators.required, Validators.min(0)]],
+    electricityProvider: ['', Validators.required],
+    meterNumber: ['', Validators.required],
+    gasLine: ['yes' as 'yes' | 'no', Validators.required],
+    waterSupply: ['corporation' as 'corporation' | 'borewell' | 'mixed', Validators.required],
+    imageUrl: [''],
+    videoUrl: [''],
   });
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly propertiesData: PropertiesDataService,
+    private readonly auth: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -53,6 +89,10 @@ export class PropertiesComponent implements OnInit {
       this.properties = items;
       this.applyFilters();
     });
+  }
+
+  get canEdit(): boolean {
+    return this.auth.hasAnyRole(['owner', 'societyAdmin']);
   }
 
   get propertyOptions(): string[] {
@@ -94,62 +134,195 @@ export class PropertiesComponent implements OnInit {
     this.applyFilters();
   }
 
-  openCreate(): void {
-    this.editMode = false;
-    this.editingId = '';
-    this.form.reset({
+  openCreateProperty(): void {
+    this.editPropertyMode = false;
+    this.editingPropertyId = '';
+    this.propertyForm.reset({
       name: '',
       city: '',
-      ownerName: '',
+      address: '',
+      description: '',
+      ownerName: this.auth.snapshotUser?.fullName ?? '',
       status: 'active',
     });
-    this.showForm = true;
+    this.showPropertyForm = true;
   }
 
-  openEdit(property: PropertyRecord): void {
-    this.editMode = true;
-    this.editingId = property.id;
-    this.form.reset({
+  openEditProperty(property: PropertyRecord): void {
+    this.editPropertyMode = true;
+    this.editingPropertyId = property.id;
+    this.propertyForm.reset({
       name: property.name,
       city: property.city,
+      address: property.address,
+      description: property.description,
       ownerName: property.ownerName,
       status: property.status,
     });
-    this.showForm = true;
+    this.showPropertyForm = true;
   }
 
-  editFromRow(propertyId: string): void {
+  editPropertyFromRow(propertyId: string): void {
     const record = this.properties.find((item) => item.id === propertyId);
     if (record) {
-      this.openEdit(record);
+      this.openEditProperty(record);
     }
   }
 
-  cancelForm(): void {
-    this.showForm = false;
-    this.formSubmitting = false;
+  openCreateUnit(propertyId: string): void {
+    this.editUnitMode = false;
+    this.editingUnitId = '';
+    this.unitForm.reset({
+      propertyId,
+      unitCode: '',
+      configuration: '1BHK',
+      furnishing: 'unfurnished',
+      rent: 0,
+      occupancyStatus: 'vacant',
+      tenantName: '',
+      carpetAreaSqFt: 0,
+      parkingTwoWheeler: 0,
+      parkingFourWheeler: 0,
+      electricityProvider: '',
+      meterNumber: '',
+      gasLine: 'yes',
+      waterSupply: 'corporation',
+      imageUrl: '',
+      videoUrl: '',
+    });
+    this.showUnitForm = true;
   }
 
-  submit(): void {
-    if (this.form.invalid || this.formSubmitting) {
-      this.form.markAllAsTouched();
+  openEditUnit(row: UnitTableRow): void {
+    if (!row.unit) {
       return;
     }
 
-    const payload = this.form.getRawValue() as PropertyCreatePayload;
+    const image = row.unit.media.find((item) => item.type === 'image')?.url ?? '';
+    const video = row.unit.media.find((item) => item.type === 'video')?.url ?? '';
+
+    this.editUnitMode = true;
+    this.editingUnitId = row.unit.id;
+    this.unitForm.reset({
+      propertyId: row.propertyId,
+      unitCode: row.unit.unitCode,
+      configuration: row.unit.configuration,
+      furnishing: row.unit.furnishing,
+      rent: row.unit.rent,
+      occupancyStatus: row.unit.occupancyStatus,
+      tenantName: row.unit.tenantName,
+      carpetAreaSqFt: row.unit.carpetAreaSqFt,
+      parkingTwoWheeler: row.unit.parking.twoWheelerSlots,
+      parkingFourWheeler: row.unit.parking.fourWheelerSlots,
+      electricityProvider: row.unit.utilities.electricityProvider,
+      meterNumber: row.unit.utilities.meterNumber,
+      gasLine: row.unit.utilities.gasLine,
+      waterSupply: row.unit.utilities.waterSupply,
+      imageUrl: image,
+      videoUrl: video,
+    });
+    this.showUnitForm = true;
+  }
+
+  viewRowDetails(row: UnitTableRow): void {
+    this.selectedRow = row;
+  }
+
+  closeDetails(): void {
+    this.selectedRow = null;
+  }
+
+  cancelPropertyForm(): void {
+    this.showPropertyForm = false;
+    this.formSubmitting = false;
+  }
+
+  cancelUnitForm(): void {
+    this.showUnitForm = false;
+    this.formSubmitting = false;
+  }
+
+  submitProperty(): void {
+    if (this.propertyForm.invalid || this.formSubmitting) {
+      this.propertyForm.markAllAsTouched();
+      return;
+    }
+
+    const payload = this.propertyForm.getRawValue() as PropertyCreatePayload;
     this.formSubmitting = true;
 
-    const request$ = this.editMode
+    const request$ = this.editPropertyMode
       ? this.propertiesData.updateProperty({
           ...(payload as PropertyUpdatePayload),
-          id: this.editingId,
+          id: this.editingPropertyId,
         })
       : this.propertiesData.createProperty(payload);
 
     request$.subscribe({
       next: () => {
         this.formSubmitting = false;
-        this.showForm = false;
+        this.showPropertyForm = false;
+        this.applyFilters();
+      },
+      error: () => {
+        this.formSubmitting = false;
+      },
+    });
+  }
+
+  submitUnit(): void {
+    if (this.unitForm.invalid || this.formSubmitting) {
+      this.unitForm.markAllAsTouched();
+      return;
+    }
+
+    const raw = this.unitForm.getRawValue();
+    const imageUrl = (raw.imageUrl ?? '').trim();
+    const videoUrl = (raw.videoUrl ?? '').trim();
+
+    const media: UnitUpsertPayload['media'] = [
+      {
+        id: `${raw.propertyId}-image`,
+        type: 'image' as const,
+        url: imageUrl,
+        title: 'Unit image',
+      },
+      {
+        id: `${raw.propertyId}-video`,
+        type: 'video' as const,
+        url: videoUrl,
+        title: 'Unit video',
+      },
+    ].filter((item) => !!item.url);
+
+    const payload: UnitUpsertPayload = {
+      id: this.editUnitMode ? this.editingUnitId : undefined,
+      propertyId: raw.propertyId ?? '',
+      unitCode: raw.unitCode ?? '',
+      configuration: (raw.configuration ?? '1BHK') as BHKType,
+      furnishing: (raw.furnishing ?? 'unfurnished') as FurnishingType,
+      rent: Number(raw.rent) || 0,
+      occupancyStatus: (raw.occupancyStatus ?? 'vacant') as UnitOccupancyStatus,
+      tenantName: raw.tenantName ?? '',
+      carpetAreaSqFt: Number(raw.carpetAreaSqFt) || 0,
+      parking: {
+        twoWheelerSlots: Number(raw.parkingTwoWheeler) || 0,
+        fourWheelerSlots: Number(raw.parkingFourWheeler) || 0,
+      },
+      utilities: {
+        electricityProvider: raw.electricityProvider ?? '',
+        meterNumber: raw.meterNumber ?? '',
+        gasLine: (raw.gasLine ?? 'yes') as 'yes' | 'no',
+        waterSupply: (raw.waterSupply ?? 'corporation') as 'corporation' | 'borewell' | 'mixed',
+      },
+      media,
+    };
+
+    this.formSubmitting = true;
+    this.propertiesData.upsertUnit(payload).subscribe({
+      next: () => {
+        this.formSubmitting = false;
+        this.showUnitForm = false;
         this.applyFilters();
       },
       error: () => {
@@ -176,6 +349,8 @@ export class PropertiesComponent implements OnInit {
               propertyName: property.name,
               propertyStatus: property.status,
               city: property.city,
+              address: property.address,
+              description: property.description,
               ownerName: property.ownerName,
               unit: undefined,
             },
@@ -187,6 +362,8 @@ export class PropertiesComponent implements OnInit {
           propertyName: property.name,
           propertyStatus: property.status,
           city: property.city,
+          address: property.address,
+          description: property.description,
           ownerName: property.ownerName,
           unit,
         }));
@@ -199,10 +376,14 @@ export class PropertiesComponent implements OnInit {
         const text = [
           row.propertyName,
           row.city,
+          row.address,
           row.ownerName,
           row.unit?.unitCode ?? '',
-          row.unit?.type ?? '',
+          row.unit?.configuration ?? '',
+          row.unit?.furnishing ?? '',
           row.unit?.tenantName ?? '',
+          row.unit?.utilities.electricityProvider ?? '',
+          row.unit?.utilities.meterNumber ?? '',
         ]
           .join(' ')
           .toLowerCase();
@@ -211,5 +392,4 @@ export class PropertiesComponent implements OnInit {
       });
   }
 }
-
 

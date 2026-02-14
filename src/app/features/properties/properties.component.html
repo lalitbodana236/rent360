@@ -1,5 +1,5 @@
 <div class="r360-page">
-  <r360-page-header title="Properties & Units" subtitle="Configurable module backed by mock JSON or real backend"></r360-page-header>
+  <r360-page-header title="Properties & Units" subtitle="Detailed property intelligence with media, utilities, parking and unit configuration"></r360-page-header>
 
   <section class="r360-section grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <r360-card>
@@ -26,7 +26,7 @@
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:min-w-[620px] lg:flex-1">
           <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
             Search
-            <input class="r360-input mt-1" type="text" [value]="search" (input)="onSearch($any($event.target).value)" placeholder="Property, city, unit, tenant" />
+            <input class="r360-input mt-1" type="text" [value]="search" (input)="onSearch($any($event.target).value)" placeholder="Property, unit, BHK, furnishing, utility" />
           </label>
 
           <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
@@ -46,15 +46,17 @@
           </label>
         </div>
 
-        <button class="r360-btn-primary" type="button" (click)="openCreate()">Add Property</button>
+        <div class="flex items-center gap-2" *ngIf="canEdit">
+          <button class="r360-btn-primary" type="button" (click)="openCreateProperty()">Add Property</button>
+        </div>
       </div>
     </r360-card>
   </section>
 
-  <section class="r360-section" *ngIf="showForm">
+  <section class="r360-section" *ngIf="showPropertyForm && canEdit">
     <r360-card>
-      <div class="mb-4 text-lg font-semibold">{{ editMode ? 'Update Property' : 'Create Property' }}</div>
-      <form class="grid grid-cols-1 gap-3 sm:grid-cols-2" (ngSubmit)="submit()" [formGroup]="form">
+      <div class="mb-4 text-lg font-semibold">{{ editPropertyMode ? 'Update Property' : 'Create Property' }}</div>
+      <form class="grid grid-cols-1 gap-3 sm:grid-cols-2" (ngSubmit)="submitProperty()" [formGroup]="propertyForm">
         <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
           Property Name
           <input class="r360-input mt-1" type="text" formControlName="name" placeholder="e.g. Palm Residency" />
@@ -63,6 +65,16 @@
         <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
           City
           <input class="r360-input mt-1" type="text" formControlName="city" placeholder="e.g. Austin" />
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300 sm:col-span-2">
+          Address
+          <input class="r360-input mt-1" type="text" formControlName="address" placeholder="Street, area, city, zip" />
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300 sm:col-span-2">
+          Description
+          <textarea class="r360-input mt-1 min-h-[88px]" formControlName="description" placeholder="Mention highlights like gated community, amenities, nearby access"></textarea>
         </label>
 
         <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
@@ -79,10 +91,157 @@
         </label>
 
         <div class="sm:col-span-2 flex flex-wrap gap-2 pt-2">
-          <button class="r360-btn-primary" type="submit" [disabled]="formSubmitting">{{ editMode ? 'Update' : 'Create' }}</button>
-          <button class="r360-btn-secondary" type="button" (click)="cancelForm()">Cancel</button>
+          <button class="r360-btn-primary" type="submit" [disabled]="formSubmitting">{{ editPropertyMode ? 'Update' : 'Create' }}</button>
+          <button class="r360-btn-secondary" type="button" (click)="cancelPropertyForm()">Cancel</button>
         </div>
       </form>
+    </r360-card>
+  </section>
+
+  <section class="r360-section" *ngIf="showUnitForm && canEdit">
+    <r360-card>
+      <div class="mb-4 text-lg font-semibold">{{ editUnitMode ? 'Update Unit Details' : 'Add Unit Details' }}</div>
+      <form class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" (ngSubmit)="submitUnit()" [formGroup]="unitForm">
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          Unit Code
+          <input class="r360-input mt-1" type="text" formControlName="unitCode" placeholder="A-101" />
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          BHK
+          <select class="r360-input mt-1" formControlName="configuration">
+            <option *ngFor="let option of bhkOptions" [value]="option">{{ option }}</option>
+          </select>
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          Furnishing
+          <select class="r360-input mt-1" formControlName="furnishing">
+            <option *ngFor="let option of furnishingOptions" [value]="option">{{ option }}</option>
+          </select>
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          Monthly Rent
+          <input class="r360-input mt-1" type="number" formControlName="rent" />
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          Occupancy
+          <select class="r360-input mt-1" formControlName="occupancyStatus">
+            <option value="occupied">Occupied</option>
+            <option value="vacant">Vacant</option>
+            <option value="maintenance">Maintenance</option>
+          </select>
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          Tenant Name
+          <input class="r360-input mt-1" type="text" formControlName="tenantName" placeholder="Tenant full name" />
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          Carpet Area (sq.ft)
+          <input class="r360-input mt-1" type="number" formControlName="carpetAreaSqFt" />
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          Two Wheeler Parking
+          <input class="r360-input mt-1" type="number" formControlName="parkingTwoWheeler" />
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          Four Wheeler Parking
+          <input class="r360-input mt-1" type="number" formControlName="parkingFourWheeler" />
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          Electricity Provider
+          <input class="r360-input mt-1" type="text" formControlName="electricityProvider" placeholder="City Power" />
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          Electricity Meter No
+          <input class="r360-input mt-1" type="text" formControlName="meterNumber" placeholder="MTR-12345" />
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          Gas Line
+          <select class="r360-input mt-1" formControlName="gasLine">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+          Water Supply
+          <select class="r360-input mt-1" formControlName="waterSupply">
+            <option value="corporation">Corporation</option>
+            <option value="borewell">Borewell</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300 xl:col-span-2">
+          Image URL
+          <input class="r360-input mt-1" type="text" formControlName="imageUrl" placeholder="https://...jpg" />
+        </label>
+
+        <label class="text-xs font-medium text-gray-500 dark:text-gray-300 xl:col-span-2">
+          Video URL
+          <input class="r360-input mt-1" type="text" formControlName="videoUrl" placeholder="https://...mp4" />
+        </label>
+
+        <div class="xl:col-span-3 flex flex-wrap gap-2 pt-2">
+          <button class="r360-btn-primary" type="submit" [disabled]="formSubmitting">{{ editUnitMode ? 'Update Unit' : 'Create Unit' }}</button>
+          <button class="r360-btn-secondary" type="button" (click)="cancelUnitForm()">Cancel</button>
+        </div>
+      </form>
+    </r360-card>
+  </section>
+
+  <section class="r360-section" *ngIf="selectedRow as detail">
+    <r360-card>
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Property & Unit Details</h3>
+        <button class="r360-btn-secondary" type="button" (click)="closeDetails()">Close</button>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/40">
+          <div class="text-xs uppercase text-gray-500">Property</div>
+          <div class="mt-2 text-lg font-semibold text-gray-900 dark:text-gray-100">{{ detail.propertyName }}</div>
+          <div class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ detail.address }}</div>
+          <div class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ detail.city }}</div>
+          <div class="mt-2 text-sm text-gray-700 dark:text-gray-200">{{ detail.description }}</div>
+          <div class="mt-3 text-sm"><span class="font-semibold">Owner:</span> {{ detail.ownerName }}</div>
+        </div>
+
+        <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/40" *ngIf="detail.unit as unit">
+          <div class="text-xs uppercase text-gray-500">Unit</div>
+          <div class="mt-2 text-lg font-semibold text-gray-900 dark:text-gray-100">{{ unit.unitCode }} • {{ unit.configuration }}</div>
+          <div class="mt-2 grid grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-200">
+            <div><span class="font-semibold">Furnishing:</span> {{ unit.furnishing }}</div>
+            <div><span class="font-semibold">Carpet:</span> {{ unit.carpetAreaSqFt }} sq.ft</div>
+            <div><span class="font-semibold">Rent:</span> {{ unit.rent | appCurrency }}</div>
+            <div><span class="font-semibold">Tenant:</span> {{ unit.tenantName || '-' }}</div>
+            <div><span class="font-semibold">2W Parking:</span> {{ unit.parking.twoWheelerSlots }}</div>
+            <div><span class="font-semibold">4W Parking:</span> {{ unit.parking.fourWheelerSlots }}</div>
+            <div><span class="font-semibold">Electricity:</span> {{ unit.utilities.electricityProvider }}</div>
+            <div><span class="font-semibold">Meter:</span> {{ unit.utilities.meterNumber }}</div>
+            <div><span class="font-semibold">Gas Line:</span> {{ unit.utilities.gasLine }}</div>
+            <div><span class="font-semibold">Water:</span> {{ unit.utilities.waterSupply }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2" *ngIf="detail.unit?.media?.length">
+        <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-700" *ngFor="let media of detail.unit?.media">
+          <div class="mb-2 text-xs uppercase text-gray-500">{{ media.type }}</div>
+          <img *ngIf="media.type === 'image'" [src]="media.url" [alt]="media.title || detail.propertyName" class="h-44 w-full rounded-lg object-cover" />
+          <video *ngIf="media.type === 'video'" [src]="media.url" controls class="h-44 w-full rounded-lg object-cover bg-black"></video>
+        </div>
+      </div>
     </r360-card>
   </section>
 
@@ -99,13 +258,15 @@
             <tr class="border-b border-gray-200 dark:border-gray-700">
               <th class="r360-th">Property</th>
               <th class="r360-th">City</th>
-              <th class="r360-th">Owner</th>
               <th class="r360-th">Unit</th>
-              <th class="r360-th">Type</th>
+              <th class="r360-th">BHK</th>
+              <th class="r360-th">Furnishing</th>
               <th class="r360-th">Rent</th>
-              <th class="r360-th">Occupancy</th>
-              <th class="r360-th">Tenant</th>
-              <th class="r360-th">Property Status</th>
+              <th class="r360-th">Carpet</th>
+              <th class="r360-th">Parking</th>
+              <th class="r360-th">Utilities</th>
+              <th class="r360-th">Media</th>
+              <th class="r360-th">Status</th>
               <th class="r360-th">Actions</th>
             </tr>
           </thead>
@@ -113,15 +274,22 @@
             <tr class="r360-row" *ngFor="let row of filteredRows">
               <td class="r360-td font-semibold text-gray-900 dark:text-gray-100">{{ row.propertyName }}</td>
               <td class="r360-td">{{ row.city }}</td>
-              <td class="r360-td">{{ row.ownerName }}</td>
               <td class="r360-td">{{ row.unit?.unitCode || '-' }}</td>
-              <td class="r360-td">{{ row.unit?.type || '-' }}</td>
+              <td class="r360-td">{{ row.unit?.configuration || '-' }}</td>
+              <td class="r360-td">{{ row.unit?.furnishing || '-' }}</td>
               <td class="r360-td">{{ row.unit ? (row.unit.rent | appCurrency) : '-' }}</td>
-              <td class="r360-td"><r360-status-badge [value]="row.unit?.occupancyStatus || '-' "></r360-status-badge></td>
-              <td class="r360-td">{{ row.unit?.tenantName || '-' }}</td>
-              <td class="r360-td"><r360-status-badge [value]="row.propertyStatus"></r360-status-badge></td>
+              <td class="r360-td">{{ row.unit?.carpetAreaSqFt ? (row.unit?.carpetAreaSqFt + ' sq.ft') : '-' }}</td>
+              <td class="r360-td">{{ row.unit ? (row.unit.parking.twoWheelerSlots + ' / ' + row.unit.parking.fourWheelerSlots) : '-' }}</td>
+              <td class="r360-td">{{ row.unit ? (row.unit.utilities.electricityProvider + ' • ' + row.unit.utilities.gasLine) : '-' }}</td>
+              <td class="r360-td">{{ row.unit?.media?.length || 0 }}</td>
+              <td class="r360-td"><r360-status-badge [value]="row.unit?.occupancyStatus || row.propertyStatus"></r360-status-badge></td>
               <td class="r360-td">
-                <button class="r360-btn-secondary !py-1.5" type="button" (click)="editFromRow(row.propertyId)">Edit</button>
+                <div class="flex flex-wrap gap-2">
+                  <button class="r360-btn-secondary !py-1.5" type="button" (click)="viewRowDetails(row)">View</button>
+                  <button class="r360-btn-secondary !py-1.5" type="button" *ngIf="canEdit" (click)="editPropertyFromRow(row.propertyId)">Edit Property</button>
+                  <button class="r360-btn-secondary !py-1.5" type="button" *ngIf="canEdit && row.unit" (click)="openEditUnit(row)">Edit Unit</button>
+                  <button class="r360-btn-secondary !py-1.5" type="button" *ngIf="canEdit && !row.unit" (click)="openCreateUnit(row.propertyId)">Add Unit</button>
+                </div>
               </td>
             </tr>
           </tbody>
