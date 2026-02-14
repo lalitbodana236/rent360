@@ -1,0 +1,93 @@
+<div class="r360-page">
+  <r360-page-header
+    [title]="isTenantView ? 'My Payments' : 'Payments'"
+    [subtitle]="
+      isTenantView
+        ? 'Track your rent, due dates, and payment history'
+        : 'Search, filter, and manage payment status'
+    "
+  ></r360-page-header>
+
+  <section class="r360-section grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <r360-card>
+      <div class="text-xs uppercase tracking-wide text-gray-500">Paid</div>
+      <div class="mt-2 text-2xl font-bold text-success">${{ paidAmount | number: '1.2-2' }}</div>
+    </r360-card>
+    <r360-card>
+      <div class="text-xs uppercase tracking-wide text-gray-500">Outstanding</div>
+      <div class="mt-2 text-2xl font-bold text-warning">${{ totalDueAmount | number: '1.2-2' }}</div>
+    </r360-card>
+    <r360-card>
+      <div class="text-xs uppercase tracking-wide text-gray-500">Pending Payments</div>
+      <div class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ pendingCount }}</div>
+    </r360-card>
+  </section>
+
+  <section class="r360-section">
+    <r360-card>
+      <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <input
+          class="r360-input md:max-w-md"
+          [value]="search"
+          (input)="search = $any($event.target).value"
+          [placeholder]="isTenantView ? 'Search my payments' : 'Search all payments'"
+        />
+
+        <a
+          *ngIf="canManagePayments"
+          routerLink="/payments/create"
+          class="r360-btn-primary"
+        >
+          Create Payment
+        </a>
+      </div>
+
+      <div class="r360-table-wrap">
+        <table class="r360-table">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th class="r360-th">ID</th>
+              <th class="r360-th">Tenant</th>
+              <th class="r360-th">Property</th>
+              <th class="r360-th">Unit</th>
+              <th class="r360-th">Due Date</th>
+              <th class="r360-th">Amount</th>
+              <th class="r360-th">Status</th>
+              <th class="r360-th">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="r360-row" *ngFor="let row of filteredRows">
+              <td class="r360-td">{{ row.id }}</td>
+              <td class="r360-td">{{ row.tenantName }}</td>
+              <td class="r360-td">{{ row.property }}</td>
+              <td class="r360-td">{{ row.unit }}</td>
+              <td class="r360-td">{{ row.dueDate }}</td>
+              <td class="r360-td">${{ row.amount | number: '1.2-2' }}</td>
+              <td class="r360-td">
+                <r360-status-badge [value]="row.status"></r360-status-badge>
+              </td>
+              <td class="r360-td">
+                <a class="r360-action-link" href="#" *ngIf="isTenantView && row.status !== 'Paid'">
+                  Pay Now
+                </a>
+                <a class="r360-action-link" href="#" *ngIf="isTenantView && row.status === 'Paid'">
+                  Download Receipt
+                </a>
+                <a class="r360-action-link" href="#" *ngIf="!isTenantView && canManagePayments">
+                  Mark Paid
+                </a>
+                <a class="r360-action-link" href="#" *ngIf="!isTenantView && !canManagePayments">
+                  View
+                </a>
+              </td>
+            </tr>
+            <tr class="r360-row" *ngIf="!filteredRows.length">
+              <td class="r360-td text-sm text-gray-500" colspan="8">No payment records available.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </r360-card>
+  </section>
+</div>

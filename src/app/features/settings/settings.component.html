@@ -16,6 +16,14 @@
         </a>
         <a
           *ngIf="canViewPermissions"
+          routerLink="roles"
+          routerLinkActive="settings-tab-active"
+          class="settings-tab"
+        >
+          Roles
+        </a>
+        <a
+          *ngIf="canViewPermissions"
           routerLink="permissions"
           routerLinkActive="settings-tab-active"
           class="settings-tab"

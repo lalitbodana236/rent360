@@ -1,0 +1,22 @@
+.role-option {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  border: 1px solid rgb(229 231 235);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+
+.role-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgb(17 24 39);
+}
+
+.role-desc {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  color: rgb(107 114 128);
+}

@@ -4,6 +4,7 @@ import { PERMISSIONS } from '../../core/constants/permissions';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { SharedModule } from '../../shared/shared.module';
 import { SettingsPermissionsComponent } from './settings-permissions.component';
+import { SettingsRolesComponent } from './settings-roles.component';
 import { SettingsUserComponent } from './settings-user.component';
 import { SettingsComponent } from './settings.component';
 
@@ -14,6 +15,12 @@ const routes: Routes = [
     children: [
       { path: '', redirectTo: 'user', pathMatch: 'full' },
       { path: 'user', component: SettingsUserComponent },
+      {
+        path: 'roles',
+        component: SettingsRolesComponent,
+        canActivate: [AuthGuard],
+        data: { permission: PERMISSIONS.authorizationManage },
+      },
       {
         path: 'permissions',
         component: SettingsPermissionsComponent,
@@ -28,6 +35,7 @@ const routes: Routes = [
   declarations: [
     SettingsComponent,
     SettingsUserComponent,
+    SettingsRolesComponent,
     SettingsPermissionsComponent,
   ],
   imports: [SharedModule, RouterModule.forChild(routes)],

@@ -1,21 +1,139 @@
 import { Component } from '@angular/core';
+import { PERMISSIONS } from '../../core/constants/permissions';
+import { AuthService } from '../../core/services/auth.service';
+import { AuthorizationService } from '../../core/services/authorization.service';
+
+type PaymentStatus = 'Paid' | 'Due' | 'Late';
+
+interface PaymentRow {
+  id: string;
+  tenantName: string;
+  tenantEmail: string;
+  property: string;
+  unit: string;
+  amount: number;
+  dueDate: string;
+  status: PaymentStatus;
+}
 
 @Component({
   selector: 'app-payments-list',
-  template: `
-    <r360-page-header title="Payments" subtitle="Search, filter, and track payment status"></r360-page-header>
-    <section class="mb-8">
-      <r360-card>
-        <div class="flex items-center justify-between mb-8">
-          <r360-input placeholder="Search payments"></r360-input>
-          <a routerLink="/payments/create" class="rounded-lg bg-secondary text-white px-4 py-2 shadow-sm">Create Payment</a>
-        </div>
-        <r360-table>
-          <thead><tr class="border-b border-gray-200 dark:border-gray-700"><th class="px-6 py-4">ID</th><th class="px-6 py-4">Tenant</th><th class="px-6 py-4">Amount</th><th class="px-6 py-4">Status</th></tr></thead>
-          <tbody><tr><td class="px-6 py-4">P-001</td><td class="px-6 py-4">Terry Tenant</td><td class="px-6 py-4">$250.00</td><td class="px-6 py-4"><r360-status-badge value="Paid"></r360-status-badge></td></tr></tbody>
-        </r360-table>
-      </r360-card>
-    </section>
-  `,
+  templateUrl: './payments-list.component.html',
 })
-export class PaymentsListComponent {}
+export class PaymentsListComponent {
+  search = '';
+
+  private readonly allRows: PaymentRow[] = [
+    {
+      id: 'P-101',
+      tenantName: 'Terry Tenant',
+      tenantEmail: 'tenant@rent360.com',
+      property: 'Maple Residency',
+      unit: 'A-101',
+      amount: 1250,
+      dueDate: '2026-02-10',
+      status: 'Paid',
+    },
+    {
+      id: 'P-102',
+      tenantName: 'Terry Tenant',
+      tenantEmail: 'tenant@rent360.com',
+      property: 'Maple Residency',
+      unit: 'A-101',
+      amount: 1280,
+      dueDate: '2026-03-10',
+      status: 'Due',
+    },
+    {
+      id: 'P-103',
+      tenantName: 'Nina Owner Tenant',
+      tenantEmail: 'owner-tenant@rent360.com',
+      property: 'ABC',
+      unit: 'A-201',
+      amount: 1400,
+      dueDate: '2026-02-05',
+      status: 'Late',
+    },
+    {
+      id: 'P-104',
+      tenantName: 'Tina Tenant Society',
+      tenantEmail: 'tenant-society@rent360.com',
+      property: 'City Nest',
+      unit: 'B-12',
+      amount: 980,
+      dueDate: '2026-02-08',
+      status: 'Paid',
+    },
+  ];
+
+  constructor(
+    private readonly auth: AuthService,
+    private readonly authorization: AuthorizationService,
+  ) {}
+
+  get isTenantView(): boolean {
+    return this.auth.snapshotUser?.roles.includes('tenant') ?? false;
+  }
+
+  get canManagePayments(): boolean {
+    return this.authorization.canWrite(PERMISSIONS.paymentsWrite);
+  }
+
+  get filteredRows(): PaymentRow[] {
+    const byRole = this.scopeRowsByRole();
+    const key = this.search.trim().toLowerCase();
+    if (!key) {
+      return byRole;
+    }
+
+    return byRole.filter((row) =>
+      [
+        row.id,
+        row.tenantName,
+        row.property,
+        row.unit,
+        row.status,
+        row.dueDate,
+      ]
+        .join(' ')
+        .toLowerCase()
+        .includes(key),
+    );
+  }
+
+  get totalDueAmount(): number {
+    return this.filteredRows
+      .filter((row) => row.status !== 'Paid')
+      .reduce((sum, row) => sum + row.amount, 0);
+  }
+
+  get paidAmount(): number {
+    return this.filteredRows
+      .filter((row) => row.status === 'Paid')
+      .reduce((sum, row) => sum + row.amount, 0);
+  }
+
+  get pendingCount(): number {
+    return this.filteredRows.filter((row) => row.status !== 'Paid').length;
+  }
+
+  private scopeRowsByRole(): PaymentRow[] {
+    if (!this.isTenantView) {
+      return this.allRows;
+    }
+
+    const user = this.auth.snapshotUser;
+    if (!user) {
+      return [];
+    }
+
+    const email = user.email.toLowerCase();
+    const name = user.fullName.toLowerCase();
+
+    return this.allRows.filter(
+      (row) =>
+        row.tenantEmail.toLowerCase() === email ||
+        row.tenantName.toLowerCase() === name,
+    );
+  }
+}

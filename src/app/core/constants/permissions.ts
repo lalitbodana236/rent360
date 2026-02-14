@@ -2,6 +2,7 @@ export const PERMISSIONS = {
   authorizationManage: 'authorization.manage',
   dashboardView: 'dashboard.view',
   paymentsView: 'payments.view',
+  paymentsWrite: 'payments.write',
   propertiesView: 'properties.view',
   propertiesWrite: 'properties.write',
   tenantsView: 'tenants.view',

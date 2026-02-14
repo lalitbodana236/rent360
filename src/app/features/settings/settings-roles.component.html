@@ -1,0 +1,74 @@
+<section class="r360-section">
+  <r360-card>
+    <div class="text-sm text-gray-600 dark:text-gray-300">
+      Assign one or multiple roles to a user after registration. Role defaults control baseline access; permission overrides can further refine behavior.
+    </div>
+  </r360-card>
+</section>
+
+<section class="r360-section" *ngIf="loading">
+  <r360-card>Loading role manager...</r360-card>
+</section>
+
+<section class="r360-section" *ngIf="!loading && error">
+  <r360-card>
+    <div class="text-sm text-danger">{{ error }}</div>
+  </r360-card>
+</section>
+
+<section class="r360-section" *ngIf="!loading && !error && !canManageAuthorization">
+  <r360-card>
+    <div class="text-sm text-gray-600 dark:text-gray-300">
+      You can view settings, but only admin-level users can assign roles.
+    </div>
+  </r360-card>
+</section>
+
+<section class="r360-section" *ngIf="!loading && !error && canManageAuthorization">
+  <r360-card>
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <label class="r360-label">
+        Select User
+        <select
+          class="r360-input mt-1"
+          [ngModel]="selectedUserEmail"
+          (ngModelChange)="selectUser($event)"
+        >
+          <option *ngFor="let user of users" [value]="user.email">
+            {{ user.fullName }} ({{ user.email }})
+          </option>
+        </select>
+      </label>
+
+      <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+        <div class="text-xs uppercase tracking-wide text-gray-500">Role Assignment Source</div>
+        <div class="mt-2 text-sm text-gray-700 dark:text-gray-200">
+          {{ hasRoleOverride(selectedUser) ? 'Custom Override' : 'Default From Mock User Data' }}
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4" *ngIf="selectedUser as user">
+      <div class="mb-3 flex items-center justify-between">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Assigned Roles</h3>
+        <button class="r360-btn-secondary" type="button" (click)="resetToDefaultRoles(user)">
+          Reset To Default Roles
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <label class="role-option" *ngFor="let role of roleOptions">
+          <input
+            type="checkbox"
+            [checked]="isRoleChecked(role.key)"
+            (change)="toggleRole(role.key, $any($event.target).checked)"
+          />
+          <span>
+            <span class="role-label">{{ role.label }}</span>
+            <span class="role-desc">{{ role.description }}</span>
+          </span>
+        </label>
+      </div>
+    </div>
+  </r360-card>
+</section>

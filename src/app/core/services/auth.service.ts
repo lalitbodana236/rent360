@@ -32,7 +32,17 @@ interface StoredSession {
 }
 
 const SESSION_KEY = 'r360_auth_session';
+const ROLE_OVERRIDES_KEY = 'r360_auth_role_overrides';
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+const AVAILABLE_ROLES: UserRole[] = [
+  'admin',
+  'owner',
+  'tenant',
+  'societyAdmin',
+  'security',
+  'vendor',
+  'publicUser',
+];
 
 @Injectable()
 export class AuthService {
@@ -61,14 +71,10 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<AuthUser> {
-    return this.apiClient
-      .get<{ users: MockAuthUser[] }>({
-        endpoint: 'auth/users',
-        mockPath: 'auth/users.json',
-      })
+    return this.fetchMockUsers()
       .pipe(
-        map((res) => {
-          const user = res.users.find(
+        map((users) => {
+          const user = users.find(
             (entry) => entry.email.toLowerCase() === email.toLowerCase() && entry.password === password,
           );
 
@@ -77,8 +83,9 @@ export class AuthService {
           }
 
           const { password: _, ...safeUser } = user;
-          this.setSession(safeUser);
-          return safeUser;
+          const effectiveUser = this.applyRoleOverride(safeUser);
+          this.setSession(effectiveUser);
+          return effectiveUser;
         }),
       );
   }
@@ -133,15 +140,98 @@ export class AuthService {
   }
 
   listUsers(): Observable<AuthUser[]> {
+    return this.fetchMockUsers()
+      .pipe(
+        map((users) =>
+          users.map(({ password: _, ...user }) => this.applyRoleOverride(user)),
+        ),
+      );
+  }
+
+  availableRoles(): UserRole[] {
+    return [...AVAILABLE_ROLES];
+  }
+
+  getUserRoleOverride(email: string): UserRole[] | null {
+    const overrides = this.readRoleOverrides();
+    return overrides[email] ?? null;
+  }
+
+  setUserRoles(email: string, roles: UserRole[]): void {
+    const normalized = this.normalizeRoles(roles);
+    const overrides = this.readRoleOverrides();
+    overrides[email] = normalized;
+    this.persistRoleOverrides(overrides);
+    this.refreshCurrentUserIfMatching(email, normalized);
+  }
+
+  clearUserRoleOverride(email: string): void {
+    const overrides = this.readRoleOverrides();
+    delete overrides[email];
+    this.persistRoleOverrides(overrides);
+    this.listUsers().subscribe((users) => {
+      const updated = users.find((user) => user.email === email);
+      if (updated) {
+        this.refreshCurrentUserIfMatching(email, updated.roles);
+      }
+    });
+  }
+
+  private fetchMockUsers(): Observable<MockAuthUser[]> {
     return this.apiClient
       .get<{ users: MockAuthUser[] }>({
         endpoint: 'auth/users',
         mockPath: 'auth/users.json',
       })
-      .pipe(
-        map((res) =>
-          res.users.map(({ password: _, ...user }) => user),
-        ),
-      );
+      .pipe(map((res) => res.users));
+  }
+
+  private applyRoleOverride(user: AuthUser): AuthUser {
+    const override = this.getUserRoleOverride(user.email);
+    if (!override?.length) {
+      return user;
+    }
+    return { ...user, roles: this.normalizeRoles(override) };
+  }
+
+  private readRoleOverrides(): Record<string, UserRole[]> {
+    try {
+      const raw = localStorage.getItem(ROLE_OVERRIDES_KEY);
+      if (!raw) {
+        return {};
+      }
+      const parsed = JSON.parse(raw) as Record<string, UserRole[]>;
+      if (!parsed || typeof parsed !== 'object') {
+        return {};
+      }
+      return parsed;
+    } catch {
+      return {};
+    }
+  }
+
+  private persistRoleOverrides(value: Record<string, UserRole[]>): void {
+    try {
+      localStorage.setItem(ROLE_OVERRIDES_KEY, JSON.stringify(value));
+    } catch {
+      // Ignore quota/private-mode errors in mock role management.
+    }
+  }
+
+  private normalizeRoles(roles: UserRole[]): UserRole[] {
+    const unique = Array.from(
+      new Set(
+        roles.filter((role): role is UserRole => AVAILABLE_ROLES.includes(role)),
+      ),
+    );
+    return unique.length ? unique : ['publicUser'];
+  }
+
+  private refreshCurrentUserIfMatching(email: string, roles: UserRole[]): void {
+    const current = this.snapshotUser;
+    if (!current || current.email !== email) {
+      return;
+    }
+    this.setSession({ ...current, roles: this.normalizeRoles(roles) });
   }
 }
