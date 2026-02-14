@@ -4,6 +4,7 @@ import { map } from 'rxjs/operators';
 import { ApiClientService } from './api-client.service';
 
 export type UserRole =
+  | 'admin'
   | 'owner'
   | 'tenant'
   | 'societyAdmin'

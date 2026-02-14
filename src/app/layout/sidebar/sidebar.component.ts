@@ -115,13 +115,13 @@ export class SidebarComponent {
       label: 'Communications',
       route: '/reports/communications',
       icon: 'chat',
-      permission: PERMISSIONS.reportsView,
+      permission: PERMISSIONS.communicationsView,
     },
     {
       label: 'Tasks',
       route: '/reports/tasks',
       icon: 'task',
-      permission: PERMISSIONS.reportsView,
+      permission: PERMISSIONS.tasksView,
     },
     {
       label: 'Reports',

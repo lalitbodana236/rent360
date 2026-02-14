@@ -129,6 +129,16 @@
       "address": "1313 Infinity Loop",
       "currency": "USD",
       "roles": ["owner", "tenant", "societyAdmin", "security", "vendor", "publicUser"]
+    },
+    {
+      "id": 14,
+      "fullName": "Aiden Admin",
+      "email": "admin@rent360.com",
+      "password": "password",
+      "mobileNumber": "+1 555-1414",
+      "address": "1414 Admin Plaza",
+      "currency": "USD",
+      "roles": ["admin"]
     }
   ]
 }

@@ -103,6 +103,14 @@
       "address": "1313 Infinity Loop",
       "currency": "USD",
       "defaultDashboard": "tenant"
+    },
+    {
+      "fullName": "Aiden Admin",
+      "email": "admin@rent360.com",
+      "mobileNumber": "+1 555-1414",
+      "address": "1414 Admin Plaza",
+      "currency": "USD",
+      "defaultDashboard": "owner"
     }
   ]
 }

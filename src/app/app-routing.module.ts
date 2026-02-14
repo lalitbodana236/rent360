@@ -74,7 +74,6 @@ const routes: Routes = [
           import('./features/reports/reports.module').then(
             (m) => m.ReportsModule,
           ),
-        data: { permission: PERMISSIONS.reportsView },
       },
       {
         path: 'settings',

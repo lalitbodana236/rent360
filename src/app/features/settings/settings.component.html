@@ -15,6 +15,7 @@
           User Settings
         </a>
         <a
+          *ngIf="canViewPermissions"
           routerLink="permissions"
           routerLinkActive="settings-tab-active"
           class="settings-tab"
