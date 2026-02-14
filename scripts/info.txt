@@ -9,3 +9,18 @@ npm cache verify
 /***build deploy****/
 npm start
 npm run deploy:gh
+
+
+
+/****USER INFO*****/
+society@rent360.com (societyAdmin)
+vendor@rent360.com (vendor)
+security@rent360.com (security)
+public@rent360.com (publicUser)
+owner-tenant@rent360.com (owner, tenant)
+owner-society@rent360.com (owner, societyAdmin)
+tenant-society@rent360.com (tenant, societyAdmin)
+society-vendor@rent360.com (societyAdmin, vendor)
+security-vendor@rent360.com (security, vendor)
+allroles@rent360.com (owner, tenant, societyAdmin, security, vendor, publicUser)
+/****USER INFO*****/
