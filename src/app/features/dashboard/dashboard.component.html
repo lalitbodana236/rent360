@@ -2,26 +2,52 @@
   <div class="r360-page">
     <r360-page-header [title]="'Good Morning, ' + userName" subtitle="Role-based overview"></r360-page-header>
 
-    <section class="r360-section" *ngIf="availablePersonas.length > 1">
-      <div class="flex flex-wrap items-center gap-2">
-        <button
-          *ngFor="let persona of availablePersonas"
-          type="button"
-          class="r360-btn-secondary"
-          [ngClass]="selectedPersona === persona ? 'bg-indigo-50 text-primary dark:bg-indigo-500/20 dark:text-indigo-200' : ''"
-          (click)="selectPersona(persona)"
-        >
-          {{ personaLabel(persona) }}
-        </button>
+    <section class="r360-section rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div class="flex flex-wrap items-center gap-2" *ngIf="availablePersonas.length > 1">
+          <button
+            *ngFor="let persona of availablePersonas"
+            type="button"
+            class="r360-btn-secondary !py-1.5"
+            [ngClass]="selectedPersona === persona ? 'bg-indigo-50 text-primary dark:bg-indigo-500/20 dark:text-indigo-200' : ''"
+            (click)="selectPersona(persona)"
+          >
+            {{ personaLabel(persona) }}
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-3 xl:min-w-[430px]">
+          <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+            View
+            <select class="r360-input mt-1 !py-1.5" [value]="viewMode" (change)="changeViewMode($any($event.target).value)">
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </label>
+
+          <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+            Month
+            <select class="r360-input mt-1 !py-1.5" [value]="selectedMonth" (change)="changeMonth($any($event.target).value)" [disabled]="viewMode === 'yearly'">
+              <option *ngFor="let month of monthOptions" [value]="month.value">{{ month.label }}</option>
+            </select>
+          </label>
+
+          <label class="text-xs font-medium text-gray-500 dark:text-gray-300">
+            Year
+            <select class="r360-input mt-1 !py-1.5" [value]="selectedYear" (change)="changeYear($any($event.target).value)">
+              <option *ngFor="let year of yearOptions" [value]="year">{{ year }}</option>
+            </select>
+          </label>
+        </div>
       </div>
     </section>
 
     <section class="r360-section">
-      <h2 class="mb-4 text-2xl font-semibold">{{ viewLabel }}</h2>
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
+      <h2 class="mb-4 break-words text-xl font-semibold sm:text-2xl">{{ viewLabel }}</h2>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <r360-card *ngFor="let kpi of vm.kpis" class="block transition-shadow hover:shadow-md">
           <div class="mb-2 text-xs uppercase tracking-wide text-gray-500">{{ kpi.label }}</div>
-          <div class="text-4xl font-bold text-gray-900 dark:text-gray-100">{{ kpi.value }}</div>
+          <div class="whitespace-nowrap text-2xl font-bold leading-tight lg:text-3xl 2xl:text-4xl text-gray-900 dark:text-gray-100">{{ kpi.value }}</div>
         </r360-card>
       </div>
     </section>
@@ -217,3 +243,7 @@
     </section>
   </div>
 </ng-container>
+
+
+
+

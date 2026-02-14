@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 @Injectable()
 export class ThemeService {
   private readonly key = 'r360_theme';
+  private readonly disableClass = 'theme-switching';
 
   constructor() {
     const stored = localStorage.getItem(this.key);
@@ -12,8 +13,19 @@ export class ThemeService {
   }
 
   toggleTheme(): void {
-    document.documentElement.classList.toggle('dark');
-    const mode = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    const root = document.documentElement;
+
+    // Prevent heavy transition repaint during theme flip.
+    root.classList.add(this.disableClass);
+    root.classList.toggle('dark');
+
+    const mode = root.classList.contains('dark') ? 'dark' : 'light';
     localStorage.setItem(this.key, mode);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        root.classList.remove(this.disableClass);
+      });
+    });
   }
 }
