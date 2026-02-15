@@ -29,6 +29,27 @@ powershell -ExecutionPolicy Bypass -File scripts/bootstrap-github-project.ps1 -D
 powershell -ExecutionPolicy Bypass -File scripts/bootstrap-github-project.ps1 -Owner lalitbodana236 -Repo rent360-ui -ProjectTitle RENT360
 ```
 
+## One Command Run (Bootstrap + Report)
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run-planning-cycle.ps1 -Owner lalitbodana236 -Repo rent360-ui -ProjectTitle RENT360
+```
+
+Dry run:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run-planning-cycle.ps1 -Owner lalitbodana236 -Repo rent360-ui -ProjectTitle RENT360 -DryRun
+```
+
+## Reset Issues (Optional)
+Delete all issues before reseeding:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/delete-all-issues.ps1 -Owner lalitbodana236 -Repo rent360-ui
+```
+
+Dry run:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/delete-all-issues.ps1 -Owner lalitbodana236 -Repo rent360-ui -DryRun
+```
+
 ## Customize Seed Backlog
 Edit:
 - `scripts/project-seed/issues.json`
