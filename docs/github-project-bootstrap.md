@@ -42,5 +42,18 @@ Each item supports:
 
 ## Notes
 1. Script is idempotent for issue titles (skips existing).
-2. Project items are added for matching story IDs in title format `[MODULE-###]`.
+2. Project items are idempotent too (skips issues already added to the project).
 3. If your project title changes, pass `-ProjectTitle` accordingly.
+
+## Progress Tracking (Weekly and Monthly)
+Planning trackers:
+- `docs/planning/weekly-execution-tracker.md`
+- `docs/planning/monthly-workload-tracker.md`
+
+Generate live progress report from GitHub issues:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/project-progress-report.ps1 -Owner lalitbodana236 -Repo rent360-ui
+```
+
+Generated file:
+- `docs/planning/monthly-progress-report.md`

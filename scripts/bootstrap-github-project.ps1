@@ -101,14 +101,33 @@ function Create-Issue {
 function Add-Issues-To-Project {
   param([int]$ProjectNumber)
 
+  $existingUrls = @{}
+  try {
+    $projectItemsRaw = gh project item-list $ProjectNumber --owner $Owner --format json 2>$null
+    if ($LASTEXITCODE -eq 0 -and $projectItemsRaw) {
+      $projectItems = $projectItemsRaw | ConvertFrom-Json
+      foreach ($item in ($projectItems.items | Where-Object { $_.content -and $_.content.url })) {
+        $existingUrls[$item.content.url] = $true
+      }
+    }
+  } catch {
+    # If listing project items fails, fallback to blind add attempt.
+  }
+
   $issues = gh issue list --repo "$Owner/$Repo" --state open --limit 500 --json url,title | ConvertFrom-Json
   foreach ($it in $issues) {
     if ($it.title -match '^\[(CORE|AUTH|DASH|PROP|TEN|PAY|SOC|MKT|COMM|REP|SET|OPS)-\d+\]') {
+      if ($existingUrls.ContainsKey($it.url)) {
+        Write-Host "Skip already in project: $($it.title)"
+        continue
+      }
+
       if ($DryRun) {
         Write-Host "[DRY-RUN] Add to project: $($it.title)"
       } else {
         gh project item-add $ProjectNumber --owner $Owner --url $it.url 1>$null 2>$null
         Write-Host "Added to project: $($it.title)"
+        $existingUrls[$it.url] = $true
       }
     }
   }
