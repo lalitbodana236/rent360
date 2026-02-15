@@ -1,1 +1,32 @@
 
+.r360-header {
+  border-bottom: 1px solid var(--r360-border);
+  background: color-mix(in oklab, var(--r360-bg-elev) 82%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.r360-search-input {
+  background: color-mix(in oklab, var(--r360-bg-elev) 78%, #dff3fa);
+}
+
+.r360-notification-panel {
+  border: 1px solid var(--r360-border);
+  background: color-mix(in oklab, var(--r360-bg-elev) 92%, white);
+}
+
+.r360-notification-badge {
+  animation: r360-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes r360-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+  }
+}

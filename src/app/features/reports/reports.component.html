@@ -1,0 +1,103 @@
+<div class="r360-page reports-enter">
+  <r360-page-header [title]="title" [subtitle]="subtitle"></r360-page-header>
+
+  <section class="r360-section">
+    <r360-card class="reports-caption-card block">
+      <div class="reports-caption">{{ scene.caption }}</div>
+      <p class="reports-description">{{ description }}</p>
+    </r360-card>
+  </section>
+
+  <section class="r360-section">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <r360-card
+        *ngFor="let metric of scene.ringMetrics; trackBy: trackByMetric"
+        class="block reports-ring-card"
+      >
+        <div class="reports-ring-wrap">
+          <svg viewBox="0 0 120 120" class="reports-ring-svg" aria-hidden="true">
+            <circle
+              class="reports-ring-track"
+              cx="60"
+              cy="60"
+              r="40"
+              stroke-width="10"
+              fill="none"
+            ></circle>
+            <circle
+              class="reports-ring-progress"
+              cx="60"
+              cy="60"
+              r="40"
+              stroke-width="10"
+              fill="none"
+              [attr.stroke]="metric.color"
+              [attr.stroke-dasharray]="ringDashArray"
+              [attr.stroke-dashoffset]="ringOffset(metric.percent)"
+            ></circle>
+          </svg>
+          <div class="reports-ring-center">
+            <span class="reports-ring-value">{{ metric.value }}</span>
+          </div>
+        </div>
+        <div class="reports-ring-label">{{ metric.label }}</div>
+      </r360-card>
+    </div>
+  </section>
+
+  <section class="r360-section">
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-5">
+      <r360-card class="block xl:col-span-3 reports-plot-card">
+        <div class="reports-card-title">Performance Trend</div>
+        <svg viewBox="0 0 360 160" class="reports-line-chart" aria-hidden="true">
+          <line x1="18" y1="18" x2="18" y2="142" class="reports-axis"></line>
+          <line x1="18" y1="142" x2="342" y2="142" class="reports-axis"></line>
+
+          <ng-container *ngFor="let series of scene.trendSeries; let i = index; trackBy: trackBySeries">
+            <path
+              *ngIf="i === 0"
+              [attr.d]="trendArea(series.values)"
+              [attr.fill]="series.color"
+              class="reports-area"
+            ></path>
+            <path
+              [attr.d]="trendPath(series.values)"
+              [attr.stroke]="series.color"
+              class="reports-line"
+            ></path>
+          </ng-container>
+        </svg>
+
+        <div class="reports-line-legend">
+          <div
+            class="reports-legend-item"
+            *ngFor="let series of scene.trendSeries; trackBy: trackBySeries"
+          >
+            <span class="reports-legend-dot" [style.background]="series.color"></span>
+            <span>{{ series.label }}</span>
+          </div>
+        </div>
+
+        <div class="reports-line-labels">
+          <span *ngFor="let label of scene.trendLabels">{{ label }}</span>
+        </div>
+      </r360-card>
+
+      <r360-card class="block xl:col-span-2 reports-plot-card">
+        <div class="reports-card-title">Category Comparison</div>
+        <div class="reports-bars">
+          <div class="reports-bar-item" *ngFor="let bar of scene.bars; trackBy: trackByBar">
+            <div class="reports-bar-track">
+              <div
+                class="reports-bar-fill"
+                [style.height.px]="barHeight(bar.value)"
+                [style.background]="bar.color"
+              ></div>
+            </div>
+            <span class="reports-bar-label">{{ bar.label }}</span>
+          </div>
+        </div>
+      </r360-card>
+    </div>
+  </section>
+</div>

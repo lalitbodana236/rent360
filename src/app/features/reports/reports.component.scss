@@ -1,0 +1,251 @@
+.reports-enter > * {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: reports-reveal 0.45s ease-out forwards;
+}
+
+.reports-enter > *:nth-child(1) {
+  animation-delay: 0.04s;
+}
+
+.reports-enter > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.reports-enter > *:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.reports-caption-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.reports-caption-card::after {
+  content: '';
+  position: absolute;
+  inset: -70% -30% auto;
+  height: 180%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(20, 184, 166, 0.08),
+    transparent
+  );
+  pointer-events: none;
+  animation: reports-sheen 5.8s ease-in-out infinite;
+}
+
+.reports-caption {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--r360-fg);
+}
+
+.reports-description {
+  margin-top: 0.45rem;
+  font-size: 0.9rem;
+  color: var(--r360-fg-muted);
+}
+
+.reports-ring-card {
+  text-align: center;
+}
+
+.reports-ring-wrap {
+  position: relative;
+  margin-inline: auto;
+  width: 120px;
+  height: 120px;
+}
+
+.reports-ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.reports-ring-track {
+  stroke: color-mix(in oklab, var(--r360-border) 70%, white);
+}
+
+.reports-ring-progress {
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s ease;
+}
+
+.reports-ring-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.reports-ring-value {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--r360-fg);
+}
+
+.reports-ring-label {
+  margin-top: 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--r360-fg-muted);
+}
+
+.reports-plot-card {
+  min-height: 280px;
+}
+
+.reports-card-title {
+  margin-bottom: 0.85rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--r360-fg);
+}
+
+.reports-line-chart {
+  width: 100%;
+  height: auto;
+}
+
+.reports-axis {
+  stroke: color-mix(in oklab, var(--r360-border) 78%, white);
+  stroke-width: 1;
+}
+
+.reports-area {
+  opacity: 0.14;
+  animation: reports-rise 0.7s ease-out both;
+}
+
+.reports-line {
+  fill: none;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: reports-draw 1.1s ease-out both;
+}
+
+.reports-line-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1rem;
+  margin-top: 0.2rem;
+}
+
+.reports-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  font-size: 0.78rem;
+  color: var(--r360-fg-muted);
+}
+
+.reports-legend-dot {
+  width: 0.58rem;
+  height: 0.58rem;
+  border-radius: 999px;
+}
+
+.reports-line-labels {
+  margin-top: 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--r360-fg-muted);
+}
+
+.reports-bars {
+  height: 200px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.7rem;
+  padding-top: 0.5rem;
+}
+
+.reports-bar-item {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+}
+
+.reports-bar-track {
+  width: 100%;
+  max-width: 44px;
+  height: 160px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--r360-border) 72%, white);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.reports-bar-fill {
+  width: 100%;
+  border-radius: 999px;
+  animation: reports-rise 0.6s ease-out both;
+}
+
+.reports-bar-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--r360-fg-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reports-enter > *,
+  .reports-caption-card::after,
+  .reports-area,
+  .reports-line,
+  .reports-bar-fill {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+@keyframes reports-reveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes reports-draw {
+  from {
+    opacity: 0.5;
+    stroke-dasharray: 500;
+    stroke-dashoffset: 500;
+  }
+  to {
+    opacity: 1;
+    stroke-dasharray: 500;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes reports-rise {
+  from {
+    transform: scaleY(0.7);
+    transform-origin: bottom;
+    opacity: 0.2;
+  }
+  to {
+    transform: scaleY(1);
+    transform-origin: bottom;
+    opacity: 1;
+  }
+}
+
+@keyframes reports-sheen {
+  0%,
+  100% {
+    transform: translateX(-90%);
+  }
+  50% {
+    transform: translateX(88%);
+  }
+}

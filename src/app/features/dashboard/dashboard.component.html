@@ -1,8 +1,8 @@
 <ng-container *ngIf="data as vm">
-  <div class="r360-page">
+  <div class="r360-page dashboard-enter">
     <r360-page-header [title]="'Good Morning, ' + userName" subtitle="Role-based overview"></r360-page-header>
 
-    <section class="r360-section r360-panel">
+    <section class="r360-section r360-panel dashboard-surface">
       <div class="dashboard-toolbar">
         <div class="dashboard-summary">
           <div class="dashboard-role-line">
@@ -14,7 +14,7 @@
             <button
               *ngFor="let persona of availablePersonas"
               type="button"
-              class="r360-chip"
+              class="r360-chip dashboard-chip"
               [ngClass]="selectedPersona === persona ? 'r360-chip-active' : ''"
               (click)="selectPersona(persona)"
             >
@@ -59,7 +59,7 @@
     <section class="r360-section">
       <h2 class="mb-4 break-words text-xl font-semibold sm:text-2xl">{{ viewLabel }}</h2>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
-        <r360-card *ngFor="let kpi of vm.kpis" class="block transition-shadow hover:shadow-md">
+        <r360-card *ngFor="let kpi of vm.kpis" class="block dashboard-kpi-card">
           <div class="mb-2 text-xs uppercase tracking-wide text-gray-500">{{ kpi.label }}</div>
           <div class="r360-kpi-value">{{ formatMetric(kpi.value) }}</div>
         </r360-card>
@@ -195,7 +195,7 @@
     <section class="r360-section" *ngIf="insights.length && selectedPersona !== 'tenant'">
       <h3 class="mb-4 text-xl font-semibold">Cross-Module Intelligence</h3>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <r360-card *ngFor="let insight of insights" class="block">
+        <r360-card *ngFor="let insight of insights" class="block dashboard-kpi-card">
           <div class="text-xs uppercase tracking-wide text-gray-500">{{ insight.title }}</div>
           <div class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ formatMetric(insight.value) }}</div>
           <p class="mt-2 text-sm text-gray-500 dark:text-gray-300">{{ insight.description }}</p>
@@ -213,7 +213,7 @@
           </div>
           <div class="h-2 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
             <div
-              class="h-full rounded-lg"
+              class="dashboard-meter-fill h-full rounded-lg"
               [ngClass]="[
                 widthClass(row.percent),
                 row.tone === 'success' ? 'bg-success' : '',
@@ -266,7 +266,7 @@
           </div>
           <div class="h-2 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
             <div
-              class="h-full rounded-lg"
+              class="dashboard-meter-fill h-full rounded-lg"
               [ngClass]="[
                 widthClass(row.percent),
                 row.tone === 'success' ? 'bg-success' : '',

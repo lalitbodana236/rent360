@@ -2,14 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+  --r360-bg: #f2f5f7;
+  --r360-bg-elev: #ffffff;
+  --r360-fg: #11222f;
+  --r360-fg-muted: #4f6474;
+  --r360-border: #d6e1e7;
+  --r360-brand-1: #0f766e;
+  --r360-brand-2: #0ea5e9;
+  --r360-brand-3: #14b8a6;
+  --r360-shadow: 0 20px 45px rgba(16, 42, 67, 0.09);
+}
+
+.dark {
+  --r360-bg: #07121d;
+  --r360-bg-elev: #0d1c2a;
+  --r360-fg: #d8e8f7;
+  --r360-fg-muted: #8facbf;
+  --r360-border: #1f3547;
+  --r360-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
 @layer base {
   html,
   body {
     @apply h-full;
   }
 
+  html {
+    font-family: 'Outfit', sans-serif;
+  }
+
   body {
-    @apply bg-gray-100 text-gray-800 antialiased dark:bg-gray-900 dark:text-gray-100;
+    @apply antialiased;
+    background:
+      radial-gradient(circle at 5% -10%, rgba(20, 184, 166, 0.16), transparent 42%),
+      radial-gradient(circle at 90% -20%, rgba(14, 165, 233, 0.14), transparent 48%),
+      linear-gradient(180deg, #f7fbfd 0%, var(--r360-bg) 60%);
+    color: var(--r360-fg);
+  }
+
+  .dark body {
+    background:
+      radial-gradient(circle at 2% -8%, rgba(20, 184, 166, 0.2), transparent 38%),
+      radial-gradient(circle at 92% -18%, rgba(14, 165, 233, 0.2), transparent 44%),
+      linear-gradient(180deg, #04101a 0%, var(--r360-bg) 55%);
   }
 
   .theme-switching *,
@@ -22,7 +61,24 @@
 
 @layer components {
   .r360-shell {
-    @apply flex h-screen min-h-0 flex-col overflow-hidden bg-gray-100 dark:bg-gray-900;
+    @apply relative flex h-screen min-h-0 flex-col overflow-hidden;
+  }
+
+  .r360-shell::before {
+    content: '';
+    position: absolute;
+    inset: auto -10% -28% -10%;
+    height: 58%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(15, 118, 110, 0.08), rgba(14, 165, 233, 0.1));
+    filter: blur(70px);
+    pointer-events: none;
+    z-index: 0;
+    animation: r360-drift 14s ease-in-out infinite alternate;
+  }
+
+  .r360-shell > * {
+    position: relative;
   }
 
   .r360-shell-main {
@@ -31,6 +87,7 @@
 
   .r360-main-content {
     @apply min-w-0 flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6;
+    animation: r360-fade-up 0.45s ease-out both;
   }
 
   .r360-page {
@@ -46,47 +103,103 @@
   }
 
   .r360-page-title {
-    @apply text-3xl font-bold leading-tight text-gray-900 dark:text-gray-100 sm:text-4xl;
+    font-family: 'Space Grotesk', sans-serif;
+    @apply text-3xl font-bold leading-tight sm:text-4xl;
+    color: var(--r360-fg);
   }
 
   .r360-page-subtitle {
-    @apply mt-1 text-sm text-gray-500 dark:text-gray-300;
+    @apply mt-1 text-sm;
+    color: var(--r360-fg-muted);
   }
 
   .r360-card {
-    @apply rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-6;
+    @apply rounded-2xl border p-4 sm:p-6;
+    border-color: var(--r360-border);
+    background: linear-gradient(180deg, color-mix(in oklab, var(--r360-bg-elev) 90%, white), var(--r360-bg-elev));
+    box-shadow: var(--r360-shadow);
+    backdrop-filter: blur(4px);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .r360-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 40px rgba(20, 45, 75, 0.12);
   }
 
   .r360-btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60;
+    background: linear-gradient(135deg, var(--r360-brand-1), var(--r360-brand-2));
+    transition: transform 0.15s ease, filter 0.2s ease;
+  }
+
+  .r360-btn-primary:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
   }
 
   .r360-btn-secondary {
-    @apply inline-flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center rounded-xl border px-3 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+    border-color: var(--r360-border);
+    color: var(--r360-fg);
+    background: color-mix(in oklab, var(--r360-bg-elev) 90%, transparent);
+  }
+
+  .r360-btn-secondary:hover {
+    background: color-mix(in oklab, var(--r360-bg-elev) 70%, #bfe8f6);
   }
 
   .r360-action-link {
-    @apply text-sm font-semibold text-primary hover:text-blue-700 dark:text-secondary dark:hover:text-sky-300;
+    @apply text-sm font-semibold;
+    color: var(--r360-brand-2);
   }
 
   .r360-input {
-    @apply w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-800 outline-none transition-colors focus:border-secondary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100;
+    @apply w-full rounded-xl border px-4 py-2 text-sm outline-none transition-colors;
+    border-color: var(--r360-border);
+    color: var(--r360-fg);
+    background: color-mix(in oklab, var(--r360-bg-elev) 94%, white);
+  }
+
+  .r360-input:focus {
+    border-color: var(--r360-brand-2);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
   }
 
   .r360-label {
-    @apply text-xs font-medium text-gray-500 dark:text-gray-300;
+    @apply text-xs font-medium;
+    color: var(--r360-fg-muted);
   }
 
   .r360-chip {
-    @apply rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm font-semibold text-gray-700 transition-colors dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200;
+    @apply rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors;
+    border-color: var(--r360-border);
+    color: var(--r360-fg);
+    background: color-mix(in oklab, var(--r360-bg-elev) 95%, white);
   }
 
   .r360-chip-active {
-    @apply border-blue-200 bg-indigo-50 text-primary dark:border-indigo-500/40 dark:bg-indigo-500/20 dark:text-indigo-200;
+    border-color: color-mix(in oklab, var(--r360-brand-1) 45%, white);
+    color: color-mix(in oklab, var(--r360-brand-1) 85%, black);
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.2), rgba(14, 165, 233, 0.18));
+  }
+
+  .dark .r360-chip-active {
+    color: #e2f8ff;
+    border-color: rgba(125, 211, 252, 0.45);
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.3), rgba(14, 165, 233, 0.24));
   }
 
   .r360-icon-btn {
-    @apply inline-grid h-9 w-9 place-items-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-700 sm:h-10 sm:w-10;
+    @apply inline-grid h-9 w-9 place-items-center rounded-xl border transition-colors sm:h-10 sm:w-10;
+    border-color: var(--r360-border);
+    color: var(--r360-fg-muted);
+    background: color-mix(in oklab, var(--r360-bg-elev) 88%, white);
+  }
+
+  .r360-icon-btn:hover {
+    color: var(--r360-fg);
+    background: color-mix(in oklab, var(--r360-bg-elev) 75%, #d5edf6);
   }
 
   .r360-icon-btn-circle {
@@ -94,35 +207,63 @@
   }
 
   .r360-panel {
-    @apply rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800;
+    @apply rounded-2xl border p-4;
+    border-color: var(--r360-border);
+    background: var(--r360-bg-elev);
+    box-shadow: var(--r360-shadow);
   }
 
   .r360-nav-link {
-    @apply relative flex items-center rounded-lg px-3 py-3 text-sm font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800;
+    @apply relative flex items-center rounded-xl px-3 py-3 text-sm font-medium transition-colors duration-150;
+    color: var(--r360-fg-muted);
   }
 
   .r360-nav-link-active {
-    @apply bg-indigo-50 text-primary dark:bg-indigo-500/20 dark:text-indigo-200;
+    color: color-mix(in oklab, var(--r360-brand-1) 78%, black);
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.22), rgba(14, 165, 233, 0.2));
+    box-shadow: inset 0 0 0 1px rgba(20, 184, 166, 0.25);
+  }
+
+  .dark .r360-nav-link-active {
+    color: #dcfefb;
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.3), rgba(14, 165, 233, 0.28));
+    box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.38);
   }
 
   .r360-subnav-link {
-    @apply block rounded-lg px-3 py-2 text-xs text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800;
+    @apply block rounded-lg px-3 py-2 text-xs transition-colors;
+    color: var(--r360-fg-muted);
   }
 
   .r360-subnav-link-active {
-    @apply bg-indigo-50 text-primary dark:bg-indigo-500/20 dark:text-indigo-200;
+    color: color-mix(in oklab, var(--r360-brand-1) 78%, black);
+    background: rgba(20, 184, 166, 0.16);
+  }
+
+  .dark .r360-subnav-link-active {
+    color: #e0f2fe;
+    background: rgba(14, 165, 233, 0.24);
   }
 
   .r360-menu {
-    @apply absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-900;
+    @apply absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-xl border shadow-md;
+    border-color: var(--r360-border);
+    background: var(--r360-bg-elev);
   }
 
   .r360-menu-item {
-    @apply block w-full px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800;
+    @apply block w-full px-3 py-2 text-left text-sm transition-colors;
+    color: var(--r360-fg);
+  }
+
+  .r360-menu-item:hover {
+    background: rgba(20, 184, 166, 0.08);
   }
 
   .r360-kpi-value {
-    @apply break-words text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100 sm:text-3xl xl:text-4xl;
+    font-family: 'Space Grotesk', sans-serif;
+    @apply break-words text-2xl font-bold leading-tight sm:text-3xl xl:text-4xl;
+    color: var(--r360-fg);
   }
 
   .r360-table-wrap {
@@ -134,15 +275,42 @@
   }
 
   .r360-th {
-    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sm:px-6 sm:py-4;
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide sm:px-6 sm:py-4;
+    color: var(--r360-fg-muted);
   }
 
   .r360-td {
-    @apply px-4 py-3 text-sm text-gray-800 dark:text-gray-100 sm:px-6 sm:py-4;
+    @apply px-4 py-3 text-sm sm:px-6 sm:py-4;
+    color: var(--r360-fg);
   }
 
   .r360-row {
-    @apply border-b border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800;
+    border-bottom: 1px solid var(--r360-border);
+    transition: background-color 0.15s ease;
+  }
+
+  .r360-row:hover {
+    background: rgba(20, 184, 166, 0.07);
+  }
+}
+
+@keyframes r360-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes r360-drift {
+  from {
+    transform: translate3d(-1.5%, 0, 0);
+  }
+  to {
+    transform: translate3d(1.5%, -2.5%, 0);
   }
 }
 

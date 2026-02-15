@@ -1,1 +1,25 @@
 
+.r360-sidebar {
+  border-right: 1px solid var(--r360-border);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--r360-bg-elev) 95%, white), var(--r360-bg-elev));
+  color: var(--r360-fg);
+}
+
+.r360-submenu-toggle:hover {
+  background: rgba(20, 184, 166, 0.14);
+}
+
+.r360-collapsed-tooltip {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.r360-sidebar-footer {
+  border-top: 1px solid var(--r360-border);
+}
+
+.r360-sidebar-user {
+  background: linear-gradient(140deg, rgba(20, 184, 166, 0.15), rgba(14, 165, 233, 0.14));
+  color: var(--r360-fg);
+}
