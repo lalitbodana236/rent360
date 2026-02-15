@@ -10,6 +10,9 @@ npm cache verify
 npm start
 npm run deploy:gh
 
+powershell -ExecutionPolicy Bypass -File scripts/run-planning-cycle.ps1 -Owner lalitbodana236 -Repo rent360-ui -ProjectTitle RENT360
+
+
 
 
 /****USER INFO*****/
